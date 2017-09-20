@@ -1,0 +1,14 @@
+E:\repo\timekeeper\StrangeIOC\bin\Debug\StrangeIOC.dll
+E:\repo\timekeeper\StrangeIOC\bin\Debug\StrangeIOC.pdb
+E:\repo\timekeeper\StrangeIOC\bin\Debug\Xamarin.Forms.Core.dll
+E:\repo\timekeeper\StrangeIOC\bin\Debug\Xamarin.Forms.Platform.dll
+E:\repo\timekeeper\StrangeIOC\bin\Debug\Xamarin.Forms.Xaml.dll
+E:\repo\timekeeper\StrangeIOC\bin\Debug\Xamarin.Forms.Core.pdb
+E:\repo\timekeeper\StrangeIOC\bin\Debug\Xamarin.Forms.Core.xml
+E:\repo\timekeeper\StrangeIOC\bin\Debug\Xamarin.Forms.Platform.pdb
+E:\repo\timekeeper\StrangeIOC\bin\Debug\Xamarin.Forms.Xaml.pdb
+E:\repo\timekeeper\StrangeIOC\bin\Debug\Xamarin.Forms.Xaml.xml
+E:\repo\timekeeper\StrangeIOC\obj\Debug\StrangeIOC.csproj.CoreCompileInputs.cache
+E:\repo\timekeeper\StrangeIOC\obj\Debug\StrangeIOC.dll
+E:\repo\timekeeper\StrangeIOC\obj\Debug\StrangeIOC.pdb
+E:\repo\timekeeper\StrangeIOC\obj\Debug\StrangeIOC.csprojResolveAssemblyReference.cache
