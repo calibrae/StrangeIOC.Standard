@@ -10,3 +10,6 @@ Temp/*
 strange-csharp.userprefs
 strangeioc_unity/Temp
 strangeioc_unity/Library/metadata
+
+bin/
+obj/
