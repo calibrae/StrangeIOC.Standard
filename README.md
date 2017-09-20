@@ -1,4 +1,4 @@
-## Strange: the IoC framework for `Unity3D` and `C#`
+## Strange: the IoC framework for `Unity3D` and `C#` and `Xamarin.FORMS`
 
 Current version: v0.7.0
 
