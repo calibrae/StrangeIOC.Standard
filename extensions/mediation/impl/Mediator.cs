@@ -26,7 +26,7 @@ using System;
 */
 using strange.extensions.context.api;
 using strange.extensions.mediation.api;
-using StrangeIOC.extensions.context.impl;
+using strange.extensions.context.impl;
 
 namespace strange.extensions.mediation.impl
 {

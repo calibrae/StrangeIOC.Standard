@@ -9,7 +9,7 @@ using strange.extensions.context.impl;
 using strange.extensions.mediation.api;
 using Xamarin.Forms;
 
-namespace StrangeIOC.extensions.context.impl
+namespace strange.extensions.context.impl
 {
     public class XamarinContextView : Application, IContextView
     {

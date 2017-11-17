@@ -17,7 +17,7 @@
 /**
  * @interface strange.extensions.injector.api.IInjectionBinder
  * 
- * A Binder that implements Dependency Injection in StrangeIoC.
+ * A Binder that implements Dependency Injection in strange.
  * 
  * Keys in this Binder are always Types, that is, they represent
  * either Classes or Interfaces, not values. Values may be either Types
