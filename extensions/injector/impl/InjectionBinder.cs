@@ -31,6 +31,7 @@ using strange.framework.api;
 using strange.extensions.injector.api;
 using strange.extensions.reflector.impl;
 using strange.framework.impl;
+using Binder = strange.framework.impl.Binder;
 
 namespace strange.extensions.injector.impl
 {

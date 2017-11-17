@@ -44,6 +44,7 @@ using strange.extensions.dispatcher.api;
 using strange.extensions.dispatcher.eventdispatcher.api;
 using strange.extensions.pool.api;
 using strange.extensions.pool.impl;
+	using Binder = strange.framework.impl.Binder;
 
 namespace strange.extensions.dispatcher.eventdispatcher.impl
 {

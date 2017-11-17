@@ -28,6 +28,7 @@ using System.Reflection;
 using strange.framework.api;
 using strange.framework.impl;
 using strange.extensions.injector.api;
+using Binder = strange.framework.impl.Binder;
 
 namespace strange.extensions.injector.impl
 {

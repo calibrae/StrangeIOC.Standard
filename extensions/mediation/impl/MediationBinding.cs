@@ -28,6 +28,7 @@ using System.Reflection;
 using strange.extensions.mediation.api;
 using strange.framework.impl;
 using strange.framework.api;
+using Binder = strange.framework.impl.Binder;
 
 namespace strange.extensions.mediation.impl
 {

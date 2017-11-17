@@ -26,6 +26,7 @@ using strange.extensions.command.impl;
 using strange.extensions.sequencer.api;
 using strange.framework.api;
 using strange.framework.impl;
+using Binder = strange.framework.impl.Binder;
 
 namespace strange.extensions.sequencer.impl
 {

@@ -32,6 +32,7 @@ using strange.extensions.mediation.api;
 using strange.framework.api;
 using strange.framework.impl;
 using Xamarin.Forms;
+using Binder = strange.framework.impl.Binder;
 
 namespace strange.extensions.mediation.impl
 {

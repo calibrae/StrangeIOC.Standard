@@ -61,6 +61,7 @@ using strange.extensions.pool.impl;
 using strange.framework.api;
 using strange.framework.impl;
 using strange.extensions.pool.api;
+using Binder = strange.framework.impl.Binder;
 
 namespace strange.extensions.command.impl
 {
