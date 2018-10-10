@@ -2,14 +2,18 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>StrangeIOC.Forms</PackageId>
+    <Version>0.0.1</Version>
+    <Authors>Marc Tanenbaum &amp; Nicolas Bousquet</Authors>
+    <Company>StrangeIOC</Company>
+    <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+    <Product>StrangeIOC.Forms</Product>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="StrangeIOC.Standard" Version="0.0.2" />
     <PackageReference Include="Xamarin.Forms" Version="3.2.0.839982" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\StrangeIOC\StrangeIOC.csproj" />
   </ItemGroup>
 
 </Project>

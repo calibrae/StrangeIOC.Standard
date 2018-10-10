@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>StrangeIOC.Standard</PackageId>
+    <Version>0.0.2</Version>
+    <Authors>Marc Tanenbaum &amp; Nicolas Bousquet</Authors>
+    <Company>StrangeIOC</Company>
+    <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
   </PropertyGroup>
 
   <ItemGroup>
