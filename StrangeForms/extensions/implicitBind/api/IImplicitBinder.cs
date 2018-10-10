@@ -15,6 +15,8 @@
  */
 
 
+using System.Reflection;
+
 namespace strange.extensions.implicitBind.api
 {
 	public interface IImplicitBinder
@@ -26,5 +28,7 @@ namespace strange.extensions.implicitBind.api
 	    /// <param name="usingNamespaces">Array of namespaces. Compared using StartsWith. </param>
 
 	    void ScanForAnnotatedClasses(string[] usingNamespaces);
+
+        Assembly Assembly { set; }
 	}
 }

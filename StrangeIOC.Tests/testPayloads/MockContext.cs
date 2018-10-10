@@ -1,4 +1,5 @@
-﻿using strange.extensions.context.impl;
+﻿using System.Reflection;
+using strange.extensions.context.impl;
 using strange.extensions.command.api;
 using strange.extensions.dispatcher.eventdispatcher.api;
 using strange.extensions.implicitBind.api;
@@ -20,6 +21,8 @@ namespace strange.unittests
 	{
 		public string[] ScannedPackages = new string[] {};
 
+        public Assembly Assembly { get; set; }
+
 		/// A Binder that maps Events to Commands
 		public ICommandBinder commandBinder{get;set;}
 
@@ -40,8 +43,10 @@ namespace strange.unittests
 
 		protected override void mapBindings()
 		{
-			base.mapBindings();
-			implicitBinder.ScanForAnnotatedClasses(ScannedPackages);
+		    implicitBinder.Assembly = Assembly.GetExecutingAssembly();
+
+		    base.mapBindings();
+            implicitBinder.ScanForAnnotatedClasses(ScannedPackages);
 		}
 
 		public void ScanForAnnotatedClasses(params string[] namespaces)

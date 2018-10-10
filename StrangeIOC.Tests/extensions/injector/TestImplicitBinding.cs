@@ -15,6 +15,7 @@ using strange.unittests.annotated.testCrossContextInterface;
 using strange.unittests.annotated.testImplTwo;
 using strange.unittests.testimplicitbindingnamespace;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace strange.unittests
 {
@@ -31,6 +32,8 @@ namespace strange.unittests
 			Context.firstContext = null;
 			contextView = new object();
 			context = new MockContext(contextView, true);
+            context.Assembly = Assembly.GetExecutingAssembly();
+           
 		}
 
 		/// <summary>
@@ -196,11 +199,14 @@ namespace strange.unittests
 			object viewChildOne  = new object();
 			object viewChildTwo = new object();
 			MockContext Parent = new MockContext(viewParent, true);
-			MockContext ChildOne = new MockContext(viewChildOne, true); //Ctr will automatically add to Context.firstcontext. No need to call it manually (and you should not).
-			MockContext ChildTwo = new MockContext(viewChildTwo, true);
+            Parent.Assembly = Assembly.GetExecutingAssembly();
+            MockContext ChildOne = new MockContext(viewChildOne, true); //Ctr will automatically add to Context.firstcontext. No need to call it manually (and you should not).
+            ChildOne.Assembly = Assembly.GetExecutingAssembly();
+            MockContext ChildTwo = new MockContext(viewChildTwo, true);
+            ChildTwo.Assembly = Assembly.GetExecutingAssembly();
 
 
-			Parent.ScannedPackages = new string[]{
+            Parent.ScannedPackages = new string[]{
 				"strange.unittests.annotated.testCrossContext"
 			};
 
@@ -237,11 +243,14 @@ namespace strange.unittests
 			object viewChildOne = new object();
 			object viewChildTwo = new object();
 			MockContext Parent = new MockContext(viewParent, true);
+            Parent.Assembly = Assembly.GetExecutingAssembly();
 			MockContext ChildOne = new MockContext(viewChildOne, true); //Ctr will automatically add to Context.firstcontext. No need to call it manually (and you should not).
-			MockContext ChildTwo = new MockContext(viewChildTwo, true);
+            ChildOne.Assembly = Assembly.GetExecutingAssembly();
+            MockContext ChildTwo = new MockContext(viewChildTwo, true);
+            ChildTwo.Assembly = Assembly.GetExecutingAssembly();
 
 
-			Parent.ScannedPackages = new string[]{
+            Parent.ScannedPackages = new string[]{
 				"strange.unittests.annotated.testCrossContext"
 			};
 
@@ -336,6 +345,7 @@ namespace strange.unittests
 				object mockGameObject = new object ();
 
 				TestImplicitBindingContext context = new TestImplicitBindingContext (mockGameObject);
+                context.Assembly = Assembly.GetExecutingAssembly();
 				contexts.Add (context);
 
 				//For each Context, check that the TestImplicitBindingClass BINDING exists (no instance created yet)
@@ -578,9 +588,13 @@ namespace strange.unittests.testimplicitbindingnamespace
 {
 	public class TestImplicitBindingContext : MockContext 
 	{
-		public TestImplicitBindingContext(object contextView) : base(contextView){}
+	    public TestImplicitBindingContext(object contextView) : base(contextView)
+	    {
+            Assembly = Assembly.GetExecutingAssembly();
+	    }
 		protected override void mapBindings()
 		{
+            implicitBinder.Assembly = Assembly.GetExecutingAssembly();
 			base.mapBindings();
 
 			Scan();

@@ -40,11 +40,16 @@ namespace strange.extensions.implicitBind.impl
 		private Assembly assembly;
 
 
-		[PostConstruct]
+		/*[PostConstruct]
 		public void PostConstruct()
 		{
 			assembly = Assembly.GetExecutingAssembly();
-		}
+		}*/
+
+        public Assembly Assembly
+	    {
+            set { assembly = value; }
+	    }
 
 		/// <summary>
 		/// Search through indicated namespaces and scan for all annotated classes.
