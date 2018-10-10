@@ -113,6 +113,7 @@
  */
 
 using System.Collections.Generic;
+using System.Reflection;
 using strange.framework.api;
 using MiniJSON;
 
@@ -428,14 +429,34 @@ namespace strange.framework.impl
 		/// <param name="jsonString">A json-parsable string containing the bindings.</param>
 		virtual public void ConsumeBindings(string jsonString)
 		{
-			List<object> list = Json.Deserialize(jsonString) as List<object>;
-			IBinding testBinding = GetRawBinding ();
 
-			for (int a=0, aa=list.Count; a < aa; a++)
-			{
-				ConsumeItem(list[a] as Dictionary<string, object>, testBinding);
-			}
+            List<object> list = Json.Deserialize(jsonString) as List<object>;
+			ConsumeBindings(list);
 		}
+/*
+	    virtual public void ConsumeBindings(string jsonString, Assembly assembly)
+	    {
+	        List<Dictionary<string, string>> list = Json.Deserialize(jsonString) as List<Dictionary<string, string>>;
+	        for (int a = 0, aa = list.Count; a < aa; a++)
+	        {
+	           list[a].
+
+	            (var key in list[a])
+	            {
+
+	            }
+	        }
+        }
+        */
+	    virtual public void ConsumeBindings(List<object> list)
+	    {
+	        IBinding testBinding = GetRawBinding();
+
+	        for (int a = 0, aa = list.Count; a < aa; a++)
+	        {
+	            ConsumeItem(list[a] as Dictionary<string, object>, testBinding);
+	        }
+        }
 
 		/// <summary>
 		/// Consumes an individual JSON element and returns the Binding that element represents 

@@ -53,6 +53,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using strange.extensions.command.api;
 using strange.extensions.dispatcher.api;
 using strange.extensions.injector.api;
@@ -60,6 +61,7 @@ using strange.extensions.pool.impl;
 using strange.framework.api;
 using strange.framework.impl;
 using strange.extensions.pool.api;
+using Binder = strange.framework.impl.Binder;
 
 namespace strange.extensions.command.impl
 {
@@ -303,7 +305,8 @@ namespace strange.extensions.command.impl
             }
             foreach (object value in valueList)
             {
-                Type valueType = Type.GetType(value as string);
+                // If this is called from another assembly, so trying to get the type from the calling assembly. It will prolly need some other work
+                Type valueType = Type.GetType(value.ToString());
                 if (valueType == null)
                 {
                     throw new BinderException("A runtime Command Binding has resolved to null. Did you forget to register its fully-qualified name?\n Command:" + value, BinderExceptionType.RUNTIME_NULL_VALUE);

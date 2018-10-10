@@ -26,10 +26,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using strange.framework.api;
 using strange.extensions.injector.api;
 using strange.extensions.reflector.impl;
 using strange.framework.impl;
+using Binder = strange.framework.impl.Binder;
 
 namespace strange.extensions.injector.impl
 {
@@ -176,7 +178,10 @@ namespace strange.extensions.injector.impl
 			// Bind in order
 			foreach (object key in keyList)
 			{
-				Type keyType = Type.GetType (key as string);
+			    // If this is called from another assembly, so trying to get the type from the calling assembly. It will prolly need some other work
+                Type keyType = Type.GetType(key as string) ??
+			                   Type.GetType(key +","+ Assembly.GetCallingAssembly().FullName);
+            
 				if (keyType == null)
 				{
 					throw new BinderException ("A runtime Injection Binding has resolved to null. Did you forget to register its fully-qualified name?\n Key:" + key, BinderExceptionType.RUNTIME_NULL_VALUE);
@@ -192,7 +197,8 @@ namespace strange.extensions.injector.impl
 			}
 			foreach (object value in valueList)
 			{
-				Type valueType = Type.GetType (value as string);
+			    // If this is called from another assembly, so trying to get the type from the calling assembly. It will prolly need some other work
+                Type valueType = Type.GetType (value as string) ?? Type.GetType(value + ","+Assembly.GetCallingAssembly().FullName);
 				if (valueType == null)
 				{
 					throw new BinderException ("A runtime Injection Binding has resolved to null. Did you forget to register its fully-qualified name?\n Value:" + value, BinderExceptionType.RUNTIME_NULL_VALUE);

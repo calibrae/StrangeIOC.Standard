@@ -146,10 +146,10 @@ namespace strange.unittests
 		[Test]
 		public void TestRuntimeCommandWithPooling()
 		{
-			string jsonInjectorString = "[{\"Bind\":\"strange.unittests.ISimpleInterface\",\"To\":\"strange.unittests.SimpleInterfaceImplementer\", \"Options\":\"ToSingleton\"}]";
+			string jsonInjectorString = "[{\"Bind\":\"strange.unittests.ISimpleInterface, StrangeIOC.Tests\",\"To\":\"strange.unittests.SimpleInterfaceImplementer, StrangeIOC.Tests\", \"Options\":\"ToSingleton\"}]";
 			injectionBinder.ConsumeBindings (jsonInjectorString);
 
-			string jsonCommandString = "[{\"Bind\":\"TestEvent\",\"To\":\"strange.unittests.CommandWithInjection\", \"Options\":\"Pooled\"}]";
+			string jsonCommandString = "[{\"Bind\":\"TestEvent\",\"To\":\"strange.unittests.CommandWithInjection, StrangeIOC.Tests\", \"Options\":\"Pooled\"}]";
 			commandBinder.ConsumeBindings(jsonCommandString);
 			ICommandBinding binding = commandBinder.GetBinding ("TestEvent") as ICommandBinding;
 			Assert.IsTrue (binding.isPooled);

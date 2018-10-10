@@ -265,7 +265,7 @@ namespace strange.unittests
 		{
 			injectionBinder.Bind<ExposedTestModel>().ToSingleton();
 
-			string jsonCommandString = "[{\"Bind\":\"strange.unittests.ExposedOneArgSignal\",\"To\":[\"strange.unittests.ExposedOneArgSignalCommand\"]}]";
+			string jsonCommandString = "[{\"Bind\":\"strange.unittests.ExposedOneArgSignal, StrangeIOC.Tests\",\"To\":[\"strange.unittests.ExposedOneArgSignalCommand, StrangeIOC.Tests\"]}]";
 			commandBinder.ConsumeBindings (jsonCommandString);
 
 			ExposedTestModel testModel = injectionBinder.GetInstance<ExposedTestModel>() as ExposedTestModel;
