@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="297b2f91-5ec9-4c14-ba18-a5feea8305fb" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/StrangeForms.Tests/StrangeForms.Tests.csproj" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/StrangeForms.Tests/UnitTest1.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/StrangeForms.Tests/extensions/mediation/TestAbstractMediationBinder.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/StrangeForms.Tests/extensions/mediation/TestSignalMediationBinder.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/StrangeIOC.Tests/extensions/command/TestCommandBinder.cs" beforeDir="false" afterPath="$PROJECT_DIR$/StrangeIOC.Tests/extensions/command/TestCommandBinder.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/StrangeIOC.Tests/extensions/command/TestCommandPooling.cs" beforeDir="false" afterPath="$PROJECT_DIR$/StrangeIOC.Tests/extensions/command/TestCommandPooling.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/StrangeIOC.Tests/extensions/injector/InjectionSpeedTest.cs" beforeDir="false" afterPath="$PROJECT_DIR$/StrangeIOC.Tests/extensions/injector/InjectionSpeedTest.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/StrangeIOC.sln" beforeDir="false" afterPath="$PROJECT_DIR$/StrangeIOC.sln" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FUSProjectUsageTrigger">
+    <session id="1517478273">
+      <usages-collector id="statistics.lifecycle.project">
+        <counts>
+          <entry key="project.closed" value="1" />
+          <entry key="project.open.time.5" value="1" />
+          <entry key="project.opened" value="1" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.extensions.open">
+        <counts>
+          <entry key="cs" value="2" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.file.types.open">
+        <counts>
+          <entry key="C#" value="2" />
+        </counts>
+      </usages-collector>
+      <usages-collector id="statistics.js.language.service.starts" />
+      <usages-collector id="statistics.vcs.git.usages" />
+      <usages-collector id="statistics.file.extensions.edit" />
+      <usages-collector id="statistics.file.types.edit" />
+    </session>
+  </component>
+  <component name="FileEditorManager">
+    <leaf>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/StrangeIOC/extensions/sequencer/impl/EventSequenceCommand.cs">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="323">
+              <caret line="29" column="17" selection-start-line="29" selection-start-column="17" selection-end-line="29" selection-end-column="17" />
+              <folding>
+                <marker date="1539184851572" expanded="true" signature="0:602" ph="/* Copyright 2013 ThirdMotion, Inc. ... */" />
+                <marker date="1539184851572" expanded="true" signature="604:695" ph="/* @class strange.extensions.sequencer.impl.EventSequenceCommand ... */" />
+                <marker date="1539184851572" expanded="false" signature="703:846" ph="..." />
+                <marker date="1539184851572" expanded="true" signature="891:1149" ph="{...}" />
+                <marker date="1539184851572" expanded="true" signature="946:1147" ph="{...}" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/StrangeForms/extensions/implicitBind/ImplementorAttribute.cs">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1260">
+              <caret line="118" column="16" selection-start-line="118" selection-start-column="16" selection-end-line="118" selection-end-column="16" />
+              <folding>
+                <marker date="1539184851350" expanded="true" signature="0:602" ph="/* Copyright 2013 ThirdMotion, Inc. ... */" />
+                <marker date="1539184851350" expanded="false" signature="610:656" ph="..." />
+                <marker date="1539184851350" expanded="true" signature="658:869" ph="/// Declares a Class to be implicitly bound. ... " />
+                <marker date="1539184851350" expanded="true" signature="870:959" ph="[...]" />
+                <marker date="1539184851350" expanded="true" signature="994:2399" ph="{...}" />
+                <marker date="1539184851350" expanded="true" signature="998:1060" ph="/// Concretely bind to own type ... " />
+                <marker date="1539184851350" expanded="true" signature="1089:1203" ph="/// Concretely bind to own type and specify scope ... " />
+                <marker date="1539184851350" expanded="true" signature="1273:1485" ph="/// Bind to an interface, specify the scope if necessary ... " />
+                <marker date="1539184851350" expanded="true" signature="1580:1627" ph="{...}" />
+                <marker date="1539184851350" expanded="true" signature="1630:1783" ph="/// Bind concretely, specifying a scope and object name ... " />
+                <marker date="1539184851350" expanded="true" signature="1844:1882" ph="{...}" />
+                <marker date="1539184851350" expanded="true" signature="1884:2138" ph="/// Bind to an interface, specifying a scope and object name ... " />
+                <marker date="1539184851350" expanded="true" signature="2207:2269" ph="{...}" />
+                <marker date="1539184851350" expanded="true" signature="2401:2553" ph="/// Declares an interface to have an implicit implementor ... " />
+                <marker date="1539184851350" expanded="true" signature="2554:2647" ph="[...]" />
+                <marker date="1539184851350" expanded="true" signature="2686:3112" ph="{...}" />
+                <marker date="1539184851350" expanded="true" signature="2690:2880" ph="/// Bind this interface to a default type t ... " />
+                <marker date="1539184851350" expanded="true" signature="2978:3020" ph="{...}" />
+                <marker date="1539184851350" expanded="true" signature="3114:3218" ph="/// Declares a View class implicity mediated by one or more named Mediators ... " />
+                <marker date="1539184851350" expanded="true" signature="3219:3307" ph="[...]" />
+                <marker date="1539184851350" expanded="true" signature="3343:3545" ph="{...}" />
+                <marker date="1539184851350" expanded="true" signature="3347:3453" ph="/// Bind this view to a Mediator ... " />
+                <marker date="1539184851350" expanded="true" signature="3547:3640" ph="/// Declare a Mediator class implicitly bound to a provided View ... " />
+                <marker date="1539184851350" expanded="true" signature="3641:3730" ph="[...]" />
+                <marker date="1539184851350" expanded="true" signature="3764:3952" ph="{...}" />
+                <marker date="1539184851350" expanded="true" signature="3768:3870" ph="/// Bind this Mediator to a view ... " />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/StrangeForms/extensions/implicitBind/ImplementorAttribute.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/StrangeIOC/extensions/sequencer/impl/EventSequenceCommand.cs" root0="FORCE_HIGHLIGHTING" />
+  </component>
+  <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsGulpfileManager">
+    <detection-done>true</detection-done>
+    <sorting>DEFINITION_ORDER</sorting>
+  </component>
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="260" />
+    <option name="y" value="20" />
+    <option name="width" value="1400" />
+    <option name="height" value="1000" />
+  </component>
+  <component name="ProjectView">
+    <navigator currentView="SolutionExplorer" proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="FileSystemExplorer" />
+      <pane id="SolutionExplorer">
+        <subPane>
+          <expand>
+            <path>
+              <item name="Project" type="784c90a0:SolutionExplorerRootNode" />
+              <item name="StrangeIOC" type="24d0babc:SolutionExplorerModelNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+        <option name="show-all-files" value="false" />
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="Rider.DefaultBreakpoints.AreToggled" value="true" />
+    <property name="Rider.ProjectViewActivator.IsNotFirstRun" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../TimeKeeper/TimeKeeper.sln" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="297b2f91-5ec9-4c14-ba18-a5feea8305fb" name="Default Changelist" comment="" />
+      <created>1539267255065</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1539267255065</updated>
+      <workItem from="1539267258061" duration="2023000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="2023000" />
+  </component>
+  <component name="TodoView">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <layout>
+      <window_info id="Favorites" side_tool="true" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.17857143" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info anchor="bottom" id="NuGet" weight="0.329718" />
+      <window_info anchor="bottom" id="Docker" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Database Changes" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Unit Tests" visible="true" weight="0.329718" />
+      <window_info anchor="bottom" id="Terminal" />
+      <window_info anchor="bottom" id="Event Log" side_tool="true" />
+      <window_info anchor="bottom" id="Build" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Run" order="2" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="right" id="Errors In Solution" />
+      <window_info anchor="right" id="Database" />
+      <window_info active="true" anchor="right" id="Unit Tests Coverage" visible="true" weight="0.32995737" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+    </layout>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="UnitTestsCoverage.Settings">
+    <option name="coveragePercentColumnWidth" value="150" />
+    <option name="sortOrder" value="DESCENDING" />
+    <option name="sortedColumn" value="1" />
+    <option name="symbolColumnWidth" value="229" />
+    <coverage-tree-state>
+      <expand>
+        <path>
+          <item name="rootNode" type="c53c71d1:RiderDotCoverCoverageTreeModel$RootNode" />
+          <item name="1" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+        </path>
+        <path>
+          <item name="rootNode" type="c53c71d1:RiderDotCoverCoverageTreeModel$RootNode" />
+          <item name="1" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="956" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+        </path>
+        <path>
+          <item name="rootNode" type="c53c71d1:RiderDotCoverCoverageTreeModel$RootNode" />
+          <item name="1" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="956" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="990" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+        </path>
+        <path>
+          <item name="rootNode" type="c53c71d1:RiderDotCoverCoverageTreeModel$RootNode" />
+          <item name="1" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="956" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="990" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="1001" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+        </path>
+        <path>
+          <item name="rootNode" type="c53c71d1:RiderDotCoverCoverageTreeModel$RootNode" />
+          <item name="1" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="956" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="990" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="1015" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+        </path>
+        <path>
+          <item name="rootNode" type="c53c71d1:RiderDotCoverCoverageTreeModel$RootNode" />
+          <item name="1" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="956" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="980" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+        </path>
+        <path>
+          <item name="rootNode" type="c53c71d1:RiderDotCoverCoverageTreeModel$RootNode" />
+          <item name="1" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="956" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="980" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+          <item name="981" type="8b8fad3a:RiderDotCoverCoverageTreeNode" />
+        </path>
+      </expand>
+      <select />
+    </coverage-tree-state>
+  </component>
+  <component name="UnityProjectConfiguration" hasMinimizedUI="null" />
+  <component name="UnityUnitTestConfiguration" currentTestLauncher="NUnit" />
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <breakpoint enabled="true" suspend="NONE" type="DotNet Exception Breakpoints">
+          <properties exception="System.Threading.ThreadAbortException" displayValue="System.Threading.ThreadAbortException" />
+          <option name="timeStamp" value="1" />
+        </breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/StrangeIOC/extensions/sequencer/impl/EventSequenceCommand.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="323">
+          <caret line="29" column="17" selection-start-line="29" selection-start-column="17" selection-end-line="29" selection-end-column="17" />
+          <folding>
+            <marker date="1539184851572" expanded="true" signature="0:602" ph="/* Copyright 2013 ThirdMotion, Inc. ... */" />
+            <marker date="1539184851572" expanded="true" signature="604:695" ph="/* @class strange.extensions.sequencer.impl.EventSequenceCommand ... */" />
+            <marker date="1539184851572" expanded="false" signature="703:846" ph="..." />
+            <marker date="1539184851572" expanded="true" signature="891:1149" ph="{...}" />
+            <marker date="1539184851572" expanded="true" signature="946:1147" ph="{...}" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/StrangeForms/extensions/implicitBind/ImplementorAttribute.cs">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1260">
+          <caret line="118" column="16" selection-start-line="118" selection-start-column="16" selection-end-line="118" selection-end-column="16" />
+          <folding>
+            <marker date="1539184851350" expanded="true" signature="0:602" ph="/* Copyright 2013 ThirdMotion, Inc. ... */" />
+            <marker date="1539184851350" expanded="false" signature="610:656" ph="..." />
+            <marker date="1539184851350" expanded="true" signature="658:869" ph="/// Declares a Class to be implicitly bound. ... " />
+            <marker date="1539184851350" expanded="true" signature="870:959" ph="[...]" />
+            <marker date="1539184851350" expanded="true" signature="994:2399" ph="{...}" />
+            <marker date="1539184851350" expanded="true" signature="998:1060" ph="/// Concretely bind to own type ... " />
+            <marker date="1539184851350" expanded="true" signature="1089:1203" ph="/// Concretely bind to own type and specify scope ... " />
+            <marker date="1539184851350" expanded="true" signature="1273:1485" ph="/// Bind to an interface, specify the scope if necessary ... " />
+            <marker date="1539184851350" expanded="true" signature="1580:1627" ph="{...}" />
+            <marker date="1539184851350" expanded="true" signature="1630:1783" ph="/// Bind concretely, specifying a scope and object name ... " />
+            <marker date="1539184851350" expanded="true" signature="1844:1882" ph="{...}" />
+            <marker date="1539184851350" expanded="true" signature="1884:2138" ph="/// Bind to an interface, specifying a scope and object name ... " />
+            <marker date="1539184851350" expanded="true" signature="2207:2269" ph="{...}" />
+            <marker date="1539184851350" expanded="true" signature="2401:2553" ph="/// Declares an interface to have an implicit implementor ... " />
+            <marker date="1539184851350" expanded="true" signature="2554:2647" ph="[...]" />
+            <marker date="1539184851350" expanded="true" signature="2686:3112" ph="{...}" />
+            <marker date="1539184851350" expanded="true" signature="2690:2880" ph="/// Bind this interface to a default type t ... " />
+            <marker date="1539184851350" expanded="true" signature="2978:3020" ph="{...}" />
+            <marker date="1539184851350" expanded="true" signature="3114:3218" ph="/// Declares a View class implicity mediated by one or more named Mediators ... " />
+            <marker date="1539184851350" expanded="true" signature="3219:3307" ph="[...]" />
+            <marker date="1539184851350" expanded="true" signature="3343:3545" ph="{...}" />
+            <marker date="1539184851350" expanded="true" signature="3347:3453" ph="/// Bind this view to a Mediator ... " />
+            <marker date="1539184851350" expanded="true" signature="3547:3640" ph="/// Declare a Mediator class implicitly bound to a provided View ... " />
+            <marker date="1539184851350" expanded="true" signature="3641:3730" ph="[...]" />
+            <marker date="1539184851350" expanded="true" signature="3764:3952" ph="{...}" />
+            <marker date="1539184851350" expanded="true" signature="3768:3870" ph="/// Bind this Mediator to a view ... " />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>
