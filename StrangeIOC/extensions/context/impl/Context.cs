@@ -39,6 +39,8 @@ namespace strange.extensions.context.impl
         /// If false, the `Launch()` method won't fire.
         public bool autoStartup;
 
+        private bool _hasStarted = false;
+
 
         public Context(ContextStartupFlags flags)
         {
@@ -73,6 +75,12 @@ namespace strange.extensions.context.impl
         /// Call this from your Root to set everything in action.
         public virtual IContext Start()
         {
+            if (_hasStarted)
+            {
+                throw new ContextException("Context has already been started, bindings will be conflicted...", ContextExceptionType.CONTEXT_STARTED_TWICE);
+            }
+
+            _hasStarted = true;
             instantiateCoreComponents();
             mapBindings();
             postBindings();

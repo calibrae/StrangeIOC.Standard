@@ -22,6 +22,9 @@ namespace strange.extensions.context.api
         NO_CONTEXT_VIEW,
 
         /// MVCSContext requires a mediationBinder
-        NO_MEDIATION_BINDER
+        NO_MEDIATION_BINDER,
+
+        // Context started twice
+        CONTEXT_STARTED_TWICE
     }
 }

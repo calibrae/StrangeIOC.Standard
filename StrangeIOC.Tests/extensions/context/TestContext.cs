@@ -81,6 +81,13 @@ namespace strange.unittests
             context.Launch();
             Assert.AreEqual(TestContextSubclass.LAUNCH_VALUE, context.testValue);
         }
+
+        [Test]
+        public void TestContextCannotBeStartedTwice()
+        {
+            var context = new TestContextSubclass();
+            Assert.Throws<ContextException>(delegate { context.Start(); });
+        }
     }
 
     internal class TestContextSubclass : Context
