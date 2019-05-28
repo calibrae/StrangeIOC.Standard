@@ -8,20 +8,19 @@ namespace FrameworkBench
     {
         public void TestMain()
         {
+
+            Console.WriteLine("////////////////////////////////////// Strange : ");
             var start = DateTime.Now;
             Console.WriteLine("Starting test at : "+start);
             var context = new TestContext();
-            context.Start();
-            Console.WriteLine("ContextCreated test at : "+(DateTime.Now - start).TotalMilliseconds);
+            Console.WriteLine(" Strange built : "+(DateTime.Now - start).TotalMilliseconds);
             start = DateTime.Now;
-            for (int i = 0; i < 50; i++)
+            for (int i = 0; i < BenchConstants.ITERATIONS; i++)
             {
                 var model = context.GetTestModel();
-                var model2 = context.GetTestModel();
-                Console.WriteLine(model == model2);
             }
 
-            Console.WriteLine("ContextCreated test at : "+(DateTime.Now - start).TotalMilliseconds);
+            Console.WriteLine("Strange Endtest : "+(DateTime.Now - start).TotalMilliseconds);
         }
     }
 
@@ -30,8 +29,7 @@ namespace FrameworkBench
         protected override void mapBindings()
         {
             Console.WriteLine("Mapping bindings");
-//            injectionBinder.Bind<TestModel>().To<TestModel>();
-            injectionBinder.Bind<TestModel>().ToSingleton();
+            injectionBinder.Bind<TestModel>().To<TestModel>();
         }
 
         public TestModel GetTestModel()

@@ -6,6 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Autofac" Version="4.9.2" />
+    <PackageReference Include="DryIoc" Version="4.0.4" />
+    <PackageReference Include="Ninject" Version="3.3.4" />
+    <PackageReference Include="Splat" Version="7.2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\StrangeIOC\StrangeIOC.csproj" />
   </ItemGroup>
 
