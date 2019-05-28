@@ -1,24 +1,17 @@
-using System;
-
 namespace strange.unittests
 {
-	public class PolymorphicClass : ISimpleInterface, IAnotherSimpleInterface
-	{
-		public PolymorphicClass ()
-		{
-		}
+    public class PolymorphicClass : ISimpleInterface, IAnotherSimpleInterface
+    {
+        #region IAnotherSimpleInterface implementation
 
-		#region ISimpleInterface implementation
+        public string stringValue { get; set; }
 
-		public int intValue { get; set;}
+        #endregion
 
-		#endregion
+        #region ISimpleInterface implementation
 
-		#region IAnotherSimpleInterface implementation
+        public int intValue { get; set; }
 
-		public string stringValue { get; set;}
-
-		#endregion
-	}
+        #endregion
+    }
 }
-

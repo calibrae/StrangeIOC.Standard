@@ -20,45 +20,38 @@
  * @deprecated
  * 
  * @see strange.extensions.command.api.ICommand
- */ 
+ */
 
-using System;
 using strange.extensions.command.impl;
-using strange.extensions.injector.api;
 using strange.extensions.sequencer.api;
 
 namespace strange.extensions.sequencer.impl
 {
-	public class SequenceCommand : Command, ISequenceCommand
-	{
-		[Inject]
-		public ISequencer sequencer{ get; set;}
+    public class SequenceCommand : Command, ISequenceCommand
+    {
+        [Inject] public ISequencer sequencer { get; set; }
 
-		public SequenceCommand ()
-		{
-		}
+        public new void Fail()
+        {
+            if (sequencer != null)
+            {
+                sequencer.Stop(this);
+            }
+        }
 
-		new public void Fail ()
-		{
-			if (sequencer != null)
-			{
-				sequencer.Stop (this);
-			}
-		}
+        public new virtual void Execute()
+        {
+            throw new SequencerException("You must override the Execute method in every SequenceCommand",
+                SequencerExceptionType.EXECUTE_OVERRIDE);
+        }
 
-		new virtual public void Execute ()
-		{
-			throw new SequencerException ("You must override the Execute method in every SequenceCommand", SequencerExceptionType.EXECUTE_OVERRIDE);
-		}
-
-		new public void Release ()
-		{
-			retain = false;
-			if (sequencer != null)
-			{
-				sequencer.ReleaseCommand (this);
-			}
-		}
-	}
+        public new void Release()
+        {
+            retain = false;
+            if (sequencer != null)
+            {
+                sequencer.ReleaseCommand(this);
+            }
+        }
+    }
 }
-

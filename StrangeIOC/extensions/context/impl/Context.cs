@@ -15,9 +15,9 @@
  */
 
 /**
- * @class strange.extensions.context.impl.Context
+ * @class strange.extensions.context.impl.ViewedContext
  * 
- * A Context is the entry point to the binding framework.
+ * A ViewedContext is the entry point to the binding framework.
  * 
  * Extend this class to create the binding context suitable 
  * for your application.
@@ -33,24 +33,17 @@ namespace strange.extensions.context.impl
 {
     public class Context : Binder, IContext
     {
-        /// The top of the View hierarchy.
-        /// In MVCSContext, this is your top-level GameObject
-        public object contextView { get; set; }
-
-        /// In a multi-Context app, this represents the first Context to instantiate.
+        /// In a multi-ViewedContext app, this represents the first ViewedContext to instantiate.
         public static IContext firstContext;
 
         /// If false, the `Launch()` method won't fire.
         public bool autoStartup;
 
-        public Context()
-        {
-        }
 
-        public Context(object view, ContextStartupFlags flags)
+        public Context(ContextStartupFlags flags)
         {
             //If firstContext was unloaded, the contextView will be null. Assign the new context as firstContext.
-            if (firstContext == null || firstContext.GetContextView() == null)
+            if (firstContext == null)
             {
                 firstContext = this;
             }
@@ -58,46 +51,27 @@ namespace strange.extensions.context.impl
             {
                 firstContext.AddContext(this);
             }
-            SetContextView(view);
+
             addCoreComponents();
-            this.autoStartup = (flags & ContextStartupFlags.MANUAL_LAUNCH) != ContextStartupFlags.MANUAL_LAUNCH;
+            autoStartup = (flags & ContextStartupFlags.MANUAL_LAUNCH) != ContextStartupFlags.MANUAL_LAUNCH;
             if ((flags & ContextStartupFlags.MANUAL_MAPPING) != ContextStartupFlags.MANUAL_MAPPING)
             {
                 Start();
             }
         }
 
-        public Context(object view) : this(view, ContextStartupFlags.AUTOMATIC) { }
-
-        public Context(object view, bool autoMapping) : this(view, (autoMapping) ? ContextStartupFlags.MANUAL_MAPPING : ContextStartupFlags.MANUAL_LAUNCH | ContextStartupFlags.MANUAL_MAPPING)
+        public Context() : this(ContextStartupFlags.AUTOMATIC)
         {
         }
 
-        /// Override to add componentry. Or just extend MVCSContext.
-        virtual protected void addCoreComponents()
+        public Context(bool autoMapping) : this(autoMapping
+            ? ContextStartupFlags.MANUAL_MAPPING
+            : ContextStartupFlags.MANUAL_LAUNCH | ContextStartupFlags.MANUAL_MAPPING)
         {
-        }
-
-        /// Override to instantiate componentry. Or just extend MVCSContext.
-        virtual protected void instantiateCoreComponents()
-        {
-        }
-
-        /// Set the object that represents the top of the Context hierarchy.
-        /// In MVCSContext, this would be a GameObject.
-        virtual public IContext SetContextView(object view)
-        {
-            contextView = view;
-            return this;
-        }
-
-        virtual public object GetContextView()
-        {
-            return contextView;
         }
 
         /// Call this from your Root to set everything in action.
-        virtual public IContext Start()
+        public virtual IContext Start()
         {
             instantiateCoreComponents();
             mapBindings();
@@ -109,28 +83,18 @@ namespace strange.extensions.context.impl
 
         /// The final method to fire after mappings.
         /// If autoStartup is false, you need to call this manually.
-        virtual public void Launch()
+        public virtual void Launch()
         {
         }
 
-        /// Override to map project-specific bindings
-        virtual protected void mapBindings()
-        {
-        }
-
-        /// Override to do things after binding but before app launch
-        virtual protected void postBindings()
-        {
-        }
-
-        /// Add another Context to this one.
-        virtual public IContext AddContext(IContext context)
+        /// Add another ViewedContext to this one.
+        public virtual IContext AddContext(IContext context)
         {
             return this;
         }
 
         /// Remove a context from this one.
-        virtual public IContext RemoveContext(IContext context)
+        public virtual IContext RemoveContext(IContext context)
         {
             //If we're removing firstContext, set firstContext to null
             if (context == firstContext)
@@ -141,33 +105,53 @@ namespace strange.extensions.context.impl
             {
                 context.OnRemove();
             }
+
             return this;
         }
 
-        /// Retrieve a component from this Context by generic type
-        virtual public object GetComponent<T>()
+        /// Register a View with this ViewedContext
+        public virtual void AddView(object view)
+        {
+            //Override in subclasses
+        }
+
+        /// Remove a View from this ViewedContext
+        public virtual void RemoveView(object view)
+        {
+            //Override in subclasses
+        }
+
+        /// Override to add componentry. Or just extend MVCSContext.
+        protected virtual void addCoreComponents()
+        {
+        }
+
+        /// Override to instantiate componentry. Or just extend MVCSContext.
+        protected virtual void instantiateCoreComponents()
+        {
+        }
+
+        /// Override to map project-specific bindings
+        protected virtual void mapBindings()
+        {
+        }
+
+        /// Override to do things after binding but before app launch
+        protected virtual void postBindings()
+        {
+        }
+
+        /// Retrieve a component from this ViewedContext by generic type
+        public virtual object GetComponent<T>()
         {
             return null;
         }
 
 
-        /// Retrieve a component from this Context by generic type and name
-        virtual public object GetComponent<T>(object name)
+        /// Retrieve a component from this ViewedContext by generic type and name
+        public virtual object GetComponent<T>(object name)
         {
             return null;
-        }
-
-        /// Register a View with this Context
-        virtual public void AddView(object view)
-        {
-            //Override in subclasses
-        }
-
-        /// Remove a View from this Context
-        virtual public void RemoveView(object view)
-        {
-            //Override in subclasses
         }
     }
 }
-

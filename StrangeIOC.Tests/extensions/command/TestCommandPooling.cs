@@ -1,169 +1,161 @@
-
-using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using strange.extensions.command.api;
 using strange.extensions.command.impl;
-using strange.extensions.injector.impl;
 using strange.extensions.injector.api;
-using strange.extensions.pool.impl;
+using strange.extensions.injector.impl;
 using strange.extensions.pool.api;
-using strange.framework.api;
 using strange.extensions.signal.impl;
+using strange.framework.api;
 
 namespace strange.unittests
 {
-	[TestFixture()]
-	public class TestCommandPooling
-	{
-		private ICommandBinder commandBinder;
-		private IPooledCommandBinder pooledCommandBinder;
-		private IInjectionBinder injectionBinder;
+    [TestFixture]
+    public class TestCommandPooling
+    {
+        [SetUp]
+        public void SetUp()
+        {
+            injectionBinder = new InjectionBinder();
+            injectionBinder.Bind<IInjectionBinder>().Bind<IInstanceProvider>().ToValue(injectionBinder);
+            injectionBinder.Bind<ICommandBinder>().To<CommandBinder>().ToSingleton();
 
+            commandBinder = injectionBinder.GetInstance<ICommandBinder>();
+            pooledCommandBinder = commandBinder as IPooledCommandBinder;
+        }
 
-		[SetUp]
-		public void SetUp()
-		{
-			injectionBinder = new InjectionBinder ();
-			injectionBinder.Bind<IInjectionBinder>().Bind<IInstanceProvider>().ToValue(injectionBinder);
-			injectionBinder.Bind<ICommandBinder> ().To<CommandBinder> ().ToSingleton();
+        [TearDown]
+        public void TearDown()
+        {
+            MarkablePoolCommand.incrementValue = 0;
+        }
 
-			commandBinder = injectionBinder.GetInstance<ICommandBinder> ();
-			pooledCommandBinder = commandBinder as IPooledCommandBinder;
-		}
+        private ICommandBinder commandBinder;
+        private IPooledCommandBinder pooledCommandBinder;
+        private IInjectionBinder injectionBinder;
 
-		[TearDown]
-		public void TearDown()
-		{
-			MarkablePoolCommand.incrementValue = 0;
-		}
+        private readonly List<SimpleInterfaceImplementer> instanceList = new List<SimpleInterfaceImplementer>();
 
-		[Test]
-		public void TestCommandIsInjected()
-		{
-			injectionBinder.Bind<ISimpleInterface> ().To<SimpleInterfaceImplementer> ();
-			commandBinder.Bind (SomeEnum.ONE).To<CommandWithInjection> ().Pooled();
-			TestDelegate testDelegate = delegate 
-			{
-				commandBinder.ReactTo (SomeEnum.ONE);
-			};
-			//If the injected value were not set, this command would throw a Null Pointer Exception
-			Assert.DoesNotThrow (testDelegate);
-		}
+        private void cb(SimpleInterfaceImplementer instance)
+        {
+            instanceList.Add(instance);
+        }
 
-		[Test]
-		public void TestCommandGetsReused()
-		{
-			commandBinder.Bind (SomeEnum.ONE).To<MarkablePoolCommand> ().Pooled();
-			IPool<MarkablePoolCommand> pool = pooledCommandBinder.GetPool<MarkablePoolCommand> ();
+        [Test]
+        public void TestCleanupInjections()
+        {
+            injectionBinder.Bind<ISimpleInterface>().To<SimpleInterfaceImplementer>();
+            commandBinder.Bind(SomeEnum.ONE).To<CommandWithInjection>().Pooled();
 
-			for (int a = 0; a < 10; a++)
-			{
-				commandBinder.ReactTo (SomeEnum.ONE);
-				Assert.AreEqual (a+1, MarkablePoolCommand.incrementValue);
-				Assert.AreEqual (1, pool.instanceCount);
-			}
-		}
+            commandBinder.ReactTo(SomeEnum.ONE);
+            IPool<CommandWithInjection> pool = pooledCommandBinder.GetPool<CommandWithInjection>();
 
-		[Test]
-		public void TestCommandBinderHasManyPools()
-		{
-			commandBinder.Bind (SomeEnum.ONE).To<MarkablePoolCommand> ().Pooled();
-			commandBinder.Bind (SomeEnum.TWO).To<CommandWithExecute> ().Pooled();
-			commandBinder.Bind (SomeEnum.THREE).To<SequenceCommandWithInjection> ().Pooled();
+            var cmd = pool.GetInstance();
 
-			IPool firstPool = pooledCommandBinder.GetPool<MarkablePoolCommand> ();
-			IPool secondPool = pooledCommandBinder.GetPool<CommandWithExecute> ();
-			IPool thirdPool = pooledCommandBinder.GetPool<SequenceCommandWithInjection> ();
+            Assert.AreEqual(1, pool.instanceCount); //These just assert our expectation that there's one instance
+            Assert.AreEqual(0, pool.available); //and we're looking at it.
 
-			Assert.IsNotNull (firstPool);
-			Assert.IsNotNull (secondPool);
-			Assert.IsNotNull (thirdPool);
+            Assert.IsNull(cmd.injected);
+        }
 
-			Assert.AreNotSame (firstPool, secondPool);
-			Assert.AreNotSame (secondPool, thirdPool);
-			Assert.AreNotSame (thirdPool, firstPool);
-		}
+        [Test]
+        public void TestCommandBinderHasManyPools()
+        {
+            commandBinder.Bind(SomeEnum.ONE).To<MarkablePoolCommand>().Pooled();
+            commandBinder.Bind(SomeEnum.TWO).To<CommandWithExecute>().Pooled();
+            commandBinder.Bind(SomeEnum.THREE).To<SequenceCommandWithInjection>().Pooled();
 
-		[Test]
-		public void TestCleanupInjections()
-		{
-			injectionBinder.Bind<ISimpleInterface> ().To<SimpleInterfaceImplementer> ();
-			commandBinder.Bind (SomeEnum.ONE).To<CommandWithInjection> ().Pooled();
+            IPool firstPool = pooledCommandBinder.GetPool<MarkablePoolCommand>();
+            IPool secondPool = pooledCommandBinder.GetPool<CommandWithExecute>();
+            IPool thirdPool = pooledCommandBinder.GetPool<SequenceCommandWithInjection>();
 
-			commandBinder.ReactTo (SomeEnum.ONE);
-			IPool<CommandWithInjection> pool = pooledCommandBinder.GetPool<CommandWithInjection> ();
+            Assert.IsNotNull(firstPool);
+            Assert.IsNotNull(secondPool);
+            Assert.IsNotNull(thirdPool);
 
-			CommandWithInjection cmd = pool.GetInstance () as CommandWithInjection;
+            Assert.AreNotSame(firstPool, secondPool);
+            Assert.AreNotSame(secondPool, thirdPool);
+            Assert.AreNotSame(thirdPool, firstPool);
+        }
 
-			Assert.AreEqual (1, pool.instanceCount);	//These just assert our expectation that there's one instance
-			Assert.AreEqual (0, pool.available);		//and we're looking at it.
+        [Test]
+        public void TestCommandGetsReused()
+        {
+            commandBinder.Bind(SomeEnum.ONE).To<MarkablePoolCommand>().Pooled();
+            IPool<MarkablePoolCommand> pool = pooledCommandBinder.GetPool<MarkablePoolCommand>();
 
-			Assert.IsNull (cmd.injected);
-		}
+            for (var a = 0; a < 10; a++)
+            {
+                commandBinder.ReactTo(SomeEnum.ONE);
+                Assert.AreEqual(a + 1, MarkablePoolCommand.incrementValue);
+                Assert.AreEqual(1, pool.instanceCount);
+            }
+        }
 
-		[Test]
-		public void TestCommandWorksSecondTime()
-		{
-			injectionBinder.Bind<ISimpleInterface> ().To<SimpleInterfaceImplementer> ();
-			commandBinder.Bind (SomeEnum.ONE).To<CommandWithInjection> ().Pooled();
+        [Test]
+        public void TestCommandIsInjected()
+        {
+            injectionBinder.Bind<ISimpleInterface>().To<SimpleInterfaceImplementer>();
+            commandBinder.Bind(SomeEnum.ONE).To<CommandWithInjection>().Pooled();
+            TestDelegate testDelegate = delegate { commandBinder.ReactTo(SomeEnum.ONE); };
+            //If the injected value were not set, this command would throw a Null Pointer Exception
+            Assert.DoesNotThrow(testDelegate);
+        }
 
-			commandBinder.ReactTo (SomeEnum.ONE);
-			IPool<CommandWithInjection> pool = pooledCommandBinder.GetPool<CommandWithInjection> ();
+        [Test]
+        public void TestCommandWorksSecondTime()
+        {
+            injectionBinder.Bind<ISimpleInterface>().To<SimpleInterfaceImplementer>();
+            commandBinder.Bind(SomeEnum.ONE).To<CommandWithInjection>().Pooled();
 
-			CommandWithInjection cmd = pool.GetInstance () as CommandWithInjection;
+            commandBinder.ReactTo(SomeEnum.ONE);
+            IPool<CommandWithInjection> pool = pooledCommandBinder.GetPool<CommandWithInjection>();
 
-			Assert.AreEqual (1, pool.instanceCount);	//These just assert our expectation that there's one instance
-			Assert.AreEqual (0, pool.available);		//and we're looking at it.
+            var cmd = pool.GetInstance();
 
-			Assert.IsNull (cmd.injected);
+            Assert.AreEqual(1, pool.instanceCount); //These just assert our expectation that there's one instance
+            Assert.AreEqual(0, pool.available); //and we're looking at it.
 
-			TestDelegate testDelegate = delegate 
-			{
-				commandBinder.ReactTo (SomeEnum.ONE);
-			};
-			Assert.DoesNotThrow (testDelegate);
-		}
+            Assert.IsNull(cmd.injected);
 
-		[Test]
-		public void TestFactoryInjectionGivesUniqueInstances()
-		{
-			injectionBinder.Bind<ISimpleInterface> ().To<SimpleInterfaceImplementer> ();
-			injectionBinder.Bind<Signal<SimpleInterfaceImplementer>> ().To<Signal<SimpleInterfaceImplementer>> ().ToSingleton ();
-			commandBinder.Bind (SomeEnum.ONE).To<CommandWithInjectionAndSignal> ().Pooled();
+            TestDelegate testDelegate = delegate { commandBinder.ReactTo(SomeEnum.ONE); };
+            Assert.DoesNotThrow(testDelegate);
+        }
 
-			Signal<SimpleInterfaceImplementer> signal = injectionBinder.GetInstance<Signal<SimpleInterfaceImplementer>>();
-			signal.AddListener (cb);
+        [Test]
+        public void TestFactoryInjectionGivesUniqueInstances()
+        {
+            injectionBinder.Bind<ISimpleInterface>().To<SimpleInterfaceImplementer>();
+            injectionBinder.Bind<Signal<SimpleInterfaceImplementer>>().To<Signal<SimpleInterfaceImplementer>>()
+                .ToSingleton();
+            commandBinder.Bind(SomeEnum.ONE).To<CommandWithInjectionAndSignal>().Pooled();
 
-			commandBinder.ReactTo (SomeEnum.ONE);
-			commandBinder.ReactTo (SomeEnum.ONE);
+            var signal = injectionBinder.GetInstance<Signal<SimpleInterfaceImplementer>>();
+            signal.AddListener(cb);
 
-			Assert.AreEqual (2, instanceList.Count);
-			Assert.AreNotSame (instanceList [0], instanceList [1]);
+            commandBinder.ReactTo(SomeEnum.ONE);
+            commandBinder.ReactTo(SomeEnum.ONE);
 
-		}
+            Assert.AreEqual(2, instanceList.Count);
+            Assert.AreNotSame(instanceList[0], instanceList[1]);
+        }
 
-		[Test]
-		public void TestRuntimeCommandWithPooling()
-		{
-			string jsonInjectorString = "[{\"Bind\":\"strange.unittests.ISimpleInterface, StrangeIOC.Tests\",\"To\":\"strange.unittests.SimpleInterfaceImplementer, StrangeIOC.Tests\", \"Options\":\"ToSingleton\"}]";
-			injectionBinder.ConsumeBindings (jsonInjectorString);
+        [Test]
+        public void TestRuntimeCommandWithPooling()
+        {
+            var jsonInjectorString =
+                "[{\"Bind\":\"strange.unittests.ISimpleInterface, StrangeIOC.Tests\",\"To\":\"strange.unittests.SimpleInterfaceImplementer, StrangeIOC.Tests\", \"Options\":\"ToSingleton\"}]";
+            injectionBinder.ConsumeBindings(jsonInjectorString);
 
-			string jsonCommandString = "[{\"Bind\":\"TestEvent\",\"To\":\"strange.unittests.CommandWithInjection, StrangeIOC.Tests\", \"Options\":\"Pooled\"}]";
-			commandBinder.ConsumeBindings(jsonCommandString);
-			ICommandBinding binding = commandBinder.GetBinding ("TestEvent") as ICommandBinding;
-			Assert.IsTrue (binding.isPooled);
-			commandBinder.ReactTo ("TestEvent");
+            var jsonCommandString =
+                "[{\"Bind\":\"TestEvent\",\"To\":\"strange.unittests.CommandWithInjection, StrangeIOC.Tests\", \"Options\":\"Pooled\"}]";
+            commandBinder.ConsumeBindings(jsonCommandString);
+            var binding = commandBinder.GetBinding("TestEvent") as ICommandBinding;
+            Assert.IsTrue(binding.isPooled);
+            commandBinder.ReactTo("TestEvent");
 
-			ISimpleInterface instance = injectionBinder.GetInstance<ISimpleInterface>() as ISimpleInterface;
-			Assert.AreEqual (100, instance.intValue);
-		}
-
-		private List<SimpleInterfaceImplementer> instanceList = new List<SimpleInterfaceImplementer>();
-		private void cb(SimpleInterfaceImplementer instance)
-		{
-			instanceList.Add (instance);
-		}
-	}
+            var instance = injectionBinder.GetInstance<ISimpleInterface>();
+            Assert.AreEqual(100, instance.intValue);
+        }
+    }
 }
-

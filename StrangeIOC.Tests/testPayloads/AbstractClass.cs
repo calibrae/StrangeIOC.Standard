@@ -1,10 +1,7 @@
-using System;
-
 namespace strange.unittests
 {
-	abstract public class AbstractClass
-	{
-		//No constructor
-	}
+    public abstract class AbstractClass
+    {
+        //No constructor
+    }
 }
-

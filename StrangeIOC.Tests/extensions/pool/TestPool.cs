@@ -1,377 +1,370 @@
 using System;
+using System.Collections;
 using NUnit.Framework;
 using strange.extensions.pool.api;
 using strange.extensions.pool.impl;
-using System.Collections;
 using strange.framework.api;
 
 namespace strange.unittests
 {
-	[TestFixture()]
-	public class TestPool
-	{
-		Pool<ClassToBeInjected> pool;
+    [TestFixture]
+    public class TestPool
+    {
+        [SetUp]
+        public void Setup()
+        {
+            pool = new Pool<ClassToBeInjected>();
+        }
 
+        [TearDown]
+        public void TearDown()
+        {
+            pool = null;
+        }
 
-		[SetUp]
-		public void Setup()
-		{
-			pool = new Pool<ClassToBeInjected> ();
-		}
+        private Pool<ClassToBeInjected> pool;
 
-		[TearDown]
-		public void TearDown()
-		{
-			pool = null;
-		}
+        [Test]
+        public void TestAdd()
+        {
+            pool.size = 4;
+            for (var a = 0; a < pool.size; a++)
+            {
+                pool.Add(new ClassToBeInjected());
+                Assert.AreEqual(a + 1, pool.available);
+            }
+        }
 
-		[Test]
-		public void TestSetPoolProperties()
-		{
-			Assert.AreEqual (0, pool.size);
+        [Test]
+        public void TestAddList()
+        {
+            pool.size = 4;
+            var list = new ClassToBeInjected[pool.size];
+            for (var a = 0; a < pool.size; a++)
+            {
+                list[a] = new ClassToBeInjected();
+            }
 
-			pool.size = 100;
-			Assert.AreEqual (100, pool.size);
+            pool.Add(list);
+            Assert.AreEqual(pool.size, pool.available);
+        }
 
-			pool.overflowBehavior = PoolOverflowBehavior.EXCEPTION;
-			Assert.AreEqual (PoolOverflowBehavior.EXCEPTION, pool.overflowBehavior);
+        //Double is default
+        [Test]
+        public void TestAutoInflationDouble()
+        {
+            pool.instanceProvider = new TestInstanceProvider();
 
-			pool.overflowBehavior = PoolOverflowBehavior.WARNING;
-			Assert.AreEqual (PoolOverflowBehavior.WARNING, pool.overflowBehavior);
+            var instance1 = pool.GetInstance();
+            Assert.IsNotNull(instance1);
+            Assert.AreEqual(1, pool.instanceCount); //First call creates one instance
+            Assert.AreEqual(0, pool.available); //Nothing available
 
-			pool.overflowBehavior = PoolOverflowBehavior.IGNORE;
-			Assert.AreEqual (PoolOverflowBehavior.IGNORE, pool.overflowBehavior);
+            var instance2 = pool.GetInstance();
+            Assert.IsNotNull(instance2);
+            Assert.AreNotSame(instance1, instance2);
+            Assert.AreEqual(2, pool.instanceCount); //Second call doubles. We have 2
+            Assert.AreEqual(0, pool.available); //Nothing available
 
-			pool.inflationType = PoolInflationType.DOUBLE;
-			Assert.AreEqual (PoolInflationType.DOUBLE, pool.inflationType);
+            var instance3 = pool.GetInstance();
+            Assert.IsNotNull(instance3);
+            Assert.AreEqual(4, pool.instanceCount); //Third call doubles. We have 4
+            Assert.AreEqual(1, pool.available); //One allocated. One available.
 
-			pool.inflationType = PoolInflationType.INCREMENT;
-			Assert.AreEqual (PoolInflationType.INCREMENT, pool.inflationType);
-		}
+            var instance4 = pool.GetInstance();
+            Assert.IsNotNull(instance4);
+            Assert.AreEqual(4, pool.instanceCount); //Fourth call. No doubling since one was available.
+            Assert.AreEqual(0, pool.available);
 
-		[Test]
-		public void TestAdd()
-		{
-			pool.size = 4;
-			for (int a = 0; a < pool.size; a++)
-			{
-				pool.Add (new ClassToBeInjected ());
-				Assert.AreEqual (a + 1, pool.available);
-			}
-		}
+            var instance5 = pool.GetInstance();
+            Assert.IsNotNull(instance5);
+            Assert.AreEqual(8, pool.instanceCount); //Fifth call. Double to 8.
+            Assert.AreEqual(3, pool.available); //Three left unallocated.
+        }
 
-		[Test]
-		public void TestAddList()
-		{
-			pool.size = 4;
-			ClassToBeInjected[] list = new ClassToBeInjected[pool.size];
-			for (int a = 0; a < pool.size; a++)
-			{
-				list[a] = new ClassToBeInjected ();
-			}
-			pool.Add (list);
-			Assert.AreEqual (pool.size, pool.available);
-		}
+        [Test]
+        public void TestAutoInflationIncrement()
+        {
+            pool.instanceProvider = new TestInstanceProvider();
+            pool.inflationType = PoolInflationType.INCREMENT;
 
-		[Test]
-		public void TestGetInstance()
-		{
-			pool.size = 4;
-			for (int a = 0; a < pool.size; a++)
-			{
-				pool.Add (new ClassToBeInjected ());
-			}
+            var testCount = 10;
 
-			for (int a = pool.size; a > 0; a--)
-			{
-				Assert.AreEqual (a, pool.available);
-				ClassToBeInjected instance = pool.GetInstance ();
-				Assert.IsNotNull (instance);
-				Assert.IsInstanceOf<ClassToBeInjected> (instance);
-				Assert.AreEqual (a - 1, pool.available);
-			}
-		}
+            var stack = new Stack();
 
-		[Test]
-		public void TestReturnInstance()
-		{
-			pool.size = 4;
-			Stack stack = new Stack (pool.size);
-			for (int a = 0; a < pool.size; a++)
-			{
-				pool.Add (new ClassToBeInjected ());
-			}
+            //Calls should simply increment. There will never be unallocated
+            for (var a = 0; a < testCount; a++)
+            {
+                var instance = pool.GetInstance();
+                Assert.IsNotNull(instance);
+                Assert.AreEqual(a + 1, pool.instanceCount);
+                Assert.AreEqual(0, pool.available);
+                stack.Push(instance);
+            }
 
-			for (int a = 0; a < pool.size; a++)
-			{
-				stack.Push(pool.GetInstance ());
-			}
+            //Now return the instances
+            for (var a = 0; a < testCount; a++)
+            {
+                var instance = stack.Pop() as ClassToBeInjected;
+                pool.ReturnInstance(instance);
 
-			Assert.AreEqual (pool.size, stack.Count);
-			Assert.AreEqual (0, pool.available);
+                Assert.AreEqual(a + 1, pool.available, "This one");
+                Assert.AreEqual(testCount, pool.instanceCount, "Or this one");
+            }
+        }
 
-			for (int a = 0; a < pool.size; a++)
-			{
-				pool.ReturnInstance (stack.Pop ());
-			}
+        [Test]
+        public void TestClean()
+        {
+            pool.size = 4;
+            for (var a = 0; a < pool.size; a++)
+            {
+                pool.Add(new ClassToBeInjected());
+            }
 
-			Assert.AreEqual (0, stack.Count);
-			Assert.AreEqual (pool.size, pool.available);
-		}
+            pool.Clean();
+            Assert.AreEqual(0, pool.available);
+        }
 
-		[Test]
-		public void TestClean()
-		{
-			pool.size = 4;
-			for (int a = 0; a < pool.size; a++)
-			{
-				pool.Add (new ClassToBeInjected ());
-			}
-			pool.Clean ();
-			Assert.AreEqual (0, pool.available);
-		}
+        [Test]
+        public void TestGetInstance()
+        {
+            pool.size = 4;
+            for (var a = 0; a < pool.size; a++)
+            {
+                pool.Add(new ClassToBeInjected());
+            }
 
-		[Test]
-		public void TestPoolOverflowException()
-		{
-			pool.size = 4;
-			for (int a = 0; a < pool.size; a++)
-			{
-				pool.Add (new ClassToBeInjected ());
-			}
+            for (var a = pool.size; a > 0; a--)
+            {
+                Assert.AreEqual(a, pool.available);
+                var instance = pool.GetInstance();
+                Assert.IsNotNull(instance);
+                Assert.IsInstanceOf<ClassToBeInjected>(instance);
+                Assert.AreEqual(a - 1, pool.available);
+            }
+        }
 
-			for (int a = pool.size; a > 0; a--)
-			{
-				Assert.AreEqual (a, pool.available);
-				pool.GetInstance ();
-			}
+        [Test]
+        public void TestOverflowWithoutException()
+        {
+            pool.size = 4;
+            pool.overflowBehavior = PoolOverflowBehavior.IGNORE;
+            for (var a = 0; a < pool.size; a++)
+            {
+                pool.Add(new ClassToBeInjected());
+            }
 
-			TestDelegate testDelegate = delegate()
-			{
-				pool.GetInstance();
-			};
-			PoolException ex = Assert.Throws<PoolException> (testDelegate);
-			Assert.AreEqual (PoolExceptionType.OVERFLOW, ex.type);
-		}
+            for (var a = pool.size; a > 0; a--)
+            {
+                Assert.AreEqual(a, pool.available);
+                pool.GetInstance();
+            }
 
-		[Test]
-		public void TestOverflowWithoutException()
-		{
-			pool.size = 4;
-			pool.overflowBehavior = PoolOverflowBehavior.IGNORE;
-			for (int a = 0; a < pool.size; a++)
-			{
-				pool.Add (new ClassToBeInjected ());
-			}
+            TestDelegate testDelegate = delegate
+            {
+                object shouldBeNull = pool.GetInstance();
+                Assert.IsNull(shouldBeNull);
+            };
+            Assert.DoesNotThrow(testDelegate);
+        }
 
-			for (int a = pool.size; a > 0; a--)
-			{
-				Assert.AreEqual (a, pool.available);
-				pool.GetInstance ();
-			}
+        [Test]
+        public void TestPoolOverflowException()
+        {
+            pool.size = 4;
+            for (var a = 0; a < pool.size; a++)
+            {
+                pool.Add(new ClassToBeInjected());
+            }
 
-			TestDelegate testDelegate = delegate()
-			{
-				object shouldBeNull = pool.GetInstance();
-				Assert.IsNull(shouldBeNull);
-			};
-			Assert.DoesNotThrow (testDelegate);
-		}
+            for (var a = pool.size; a > 0; a--)
+            {
+                Assert.AreEqual(a, pool.available);
+                pool.GetInstance();
+            }
 
-		[Test]
-		public void TestPoolTypeMismatchException()
-		{
-			pool.size = 4;
-			pool.Add (new ClassToBeInjected ());
+            TestDelegate testDelegate = delegate { pool.GetInstance(); };
+            var ex = Assert.Throws<PoolException>(testDelegate);
+            Assert.AreEqual(PoolExceptionType.OVERFLOW, ex.type);
+        }
 
-			TestDelegate testDelegate = delegate()
-			{
-				pool.Add(new InjectableDerivedClass());
-			};
-			PoolException ex = Assert.Throws<PoolException> (testDelegate);
-			Assert.AreEqual (PoolExceptionType.TYPE_MISMATCH, ex.type);
-		}
+        [Test]
+        public void TestPoolTypeMismatchException()
+        {
+            pool.size = 4;
+            pool.Add(new ClassToBeInjected());
 
-		[Test]
-		public void TestRemoveFromPool()
-		{
-			pool.size = 4;
-			for (int a = 0; a < pool.size; a++)
-			{
-				pool.Add (new ClassToBeInjected ());
-			}
+            TestDelegate testDelegate = delegate { pool.Add(new InjectableDerivedClass()); };
+            var ex = Assert.Throws<PoolException>(testDelegate);
+            Assert.AreEqual(PoolExceptionType.TYPE_MISMATCH, ex.type);
+        }
 
-			for (int a = pool.size; a > 0; a--)
-			{
-				Assert.AreEqual (a, pool.available);
-				ClassToBeInjected instance = pool.GetInstance ();
-				pool.Remove (instance);
-			}
+        [Test]
+        public void TestReleaseOfPoolable()
+        {
+            var anotherPool = new Pool<PooledInstance>();
 
-			Assert.AreEqual (0, pool.available);
-		}
+            anotherPool.size = 4;
+            anotherPool.Add(new PooledInstance());
+            var instance = anotherPool.GetInstance();
+            instance.someValue = 42;
+            Assert.AreEqual(42, instance.someValue);
+            anotherPool.ReturnInstance(instance);
+            Assert.AreEqual(0, instance.someValue);
+        }
 
-		[Test]
-		public void TestRemoveList1()
-		{
-			pool.size = 4;
-			for (int a = 0; a < pool.size; a++)
-			{
-				pool.Add (new ClassToBeInjected ());
-			}
+        [Test]
+        public void TestRemovalException()
+        {
+            pool.size = 4;
+            pool.Add(new ClassToBeInjected());
+            TestDelegate testDelegate = delegate { pool.Remove(new InjectableDerivedClass()); };
+            var ex = Assert.Throws<PoolException>(testDelegate);
+            Assert.AreEqual(PoolExceptionType.TYPE_MISMATCH, ex.type);
+        }
 
-			ClassToBeInjected[] removalList = new ClassToBeInjected[3];
-			for (int a = 0; a < pool.size - 1; a++)
-			{
-				removalList [a] = new ClassToBeInjected ();
-			}
-			pool.Remove (removalList);
-			Assert.AreEqual (1, pool.available);
-		}
+        [Test]
+        public void TestRemoveFromPool()
+        {
+            pool.size = 4;
+            for (var a = 0; a < pool.size; a++)
+            {
+                pool.Add(new ClassToBeInjected());
+            }
 
-		[Test]
-		public void TestRemoveList2()
-		{
-			pool.size = 4;
-			for (int a = 0; a < pool.size; a++)
-			{
-				pool.Add (new ClassToBeInjected ());
-			}
+            for (var a = pool.size; a > 0; a--)
+            {
+                Assert.AreEqual(a, pool.available);
+                var instance = pool.GetInstance();
+                pool.Remove(instance);
+            }
 
-			ClassToBeInjected[] removalList = new ClassToBeInjected[3];
-			for (int a = 0; a < pool.size - 1; a++)
-			{
-				removalList [a] = pool.GetInstance ();
-			}
-			pool.Remove (removalList);
-			Assert.AreEqual (1, pool.available);
-		}
+            Assert.AreEqual(0, pool.available);
+        }
 
-		[Test]
-		public void TestRemovalException()
-		{
-			pool.size = 4;
-			pool.Add (new ClassToBeInjected ());
-			TestDelegate testDelegate = delegate()
-			{
-				pool.Remove (new InjectableDerivedClass ());
-			};
-			PoolException ex = Assert.Throws<PoolException> (testDelegate);
-			Assert.AreEqual (PoolExceptionType.TYPE_MISMATCH, ex.type);
-		}
+        [Test]
+        public void TestRemoveList1()
+        {
+            pool.size = 4;
+            for (var a = 0; a < pool.size; a++)
+            {
+                pool.Add(new ClassToBeInjected());
+            }
 
-		[Test]
-		public void TestReleaseOfPoolable()
-		{
-			Pool<PooledInstance> anotherPool = new Pool<PooledInstance>();
+            var removalList = new ClassToBeInjected[3];
+            for (var a = 0; a < pool.size - 1; a++)
+            {
+                removalList[a] = new ClassToBeInjected();
+            }
 
-			anotherPool.size = 4;
-			anotherPool.Add (new PooledInstance ());
-			PooledInstance instance = anotherPool.GetInstance ();
-			instance.someValue = 42;
-			Assert.AreEqual (42, instance.someValue);
-			anotherPool.ReturnInstance (instance);
-			Assert.AreEqual (0, instance.someValue);
-		}
+            pool.Remove(removalList);
+            Assert.AreEqual(1, pool.available);
+        }
 
-		//Double is default
-		[Test]
-		public void TestAutoInflationDouble()
-		{
-			pool.instanceProvider = new TestInstanceProvider ();
+        [Test]
+        public void TestRemoveList2()
+        {
+            pool.size = 4;
+            for (var a = 0; a < pool.size; a++)
+            {
+                pool.Add(new ClassToBeInjected());
+            }
 
-			ClassToBeInjected instance1 = pool.GetInstance ();
-			Assert.IsNotNull (instance1);
-			Assert.AreEqual (1, pool.instanceCount);	//First call creates one instance
-			Assert.AreEqual (0, pool.available);		//Nothing available
+            var removalList = new ClassToBeInjected[3];
+            for (var a = 0; a < pool.size - 1; a++)
+            {
+                removalList[a] = pool.GetInstance();
+            }
 
-			ClassToBeInjected instance2 = pool.GetInstance ();
-			Assert.IsNotNull (instance2);
-			Assert.AreNotSame (instance1, instance2);
-			Assert.AreEqual (2, pool.instanceCount);	//Second call doubles. We have 2
-			Assert.AreEqual (0, pool.available);		//Nothing available
+            pool.Remove(removalList);
+            Assert.AreEqual(1, pool.available);
+        }
 
-			ClassToBeInjected instance3 = pool.GetInstance ();
-			Assert.IsNotNull (instance3);
-			Assert.AreEqual (4, pool.instanceCount);	//Third call doubles. We have 4
-			Assert.AreEqual (1, pool.available);		//One allocated. One available.
+        [Test]
+        public void TestReturnInstance()
+        {
+            pool.size = 4;
+            var stack = new Stack(pool.size);
+            for (var a = 0; a < pool.size; a++)
+            {
+                pool.Add(new ClassToBeInjected());
+            }
 
-			ClassToBeInjected instance4 = pool.GetInstance ();
-			Assert.IsNotNull (instance4);
-			Assert.AreEqual (4, pool.instanceCount);	//Fourth call. No doubling since one was available.
-			Assert.AreEqual (0, pool.available);
+            for (var a = 0; a < pool.size; a++)
+            {
+                stack.Push(pool.GetInstance());
+            }
 
-			ClassToBeInjected instance5 = pool.GetInstance ();
-			Assert.IsNotNull (instance5);
-			Assert.AreEqual (8, pool.instanceCount);	//Fifth call. Double to 8.
-			Assert.AreEqual (3, pool.available);		//Three left unallocated.
-		}
+            Assert.AreEqual(pool.size, stack.Count);
+            Assert.AreEqual(0, pool.available);
 
-		[Test]
-		public void TestAutoInflationIncrement()
-		{
-			pool.instanceProvider = new TestInstanceProvider ();
-			pool.inflationType = PoolInflationType.INCREMENT;
+            for (var a = 0; a < pool.size; a++)
+            {
+                pool.ReturnInstance(stack.Pop());
+            }
 
-			int testCount = 10;
+            Assert.AreEqual(0, stack.Count);
+            Assert.AreEqual(pool.size, pool.available);
+        }
 
-			Stack stack = new Stack();
+        [Test]
+        public void TestSetPoolProperties()
+        {
+            Assert.AreEqual(0, pool.size);
 
-			//Calls should simply increment. There will never be unallocated
-			for (int a = 0; a < testCount; a++)
-			{
-				ClassToBeInjected instance = pool.GetInstance ();
-				Assert.IsNotNull (instance);
-				Assert.AreEqual (a + 1, pool.instanceCount);
-				Assert.AreEqual (0, pool.available);
-				stack.Push (instance);
-			}
+            pool.size = 100;
+            Assert.AreEqual(100, pool.size);
 
-			//Now return the instances
-			for (int a = 0; a < testCount; a++)
-			{
-				ClassToBeInjected instance = stack.Pop () as ClassToBeInjected;
-				pool.ReturnInstance (instance);
+            pool.overflowBehavior = PoolOverflowBehavior.EXCEPTION;
+            Assert.AreEqual(PoolOverflowBehavior.EXCEPTION, pool.overflowBehavior);
 
-				Assert.AreEqual (a + 1, pool.available, "This one");
-				Assert.AreEqual (testCount, pool.instanceCount, "Or this one");
-			}
-		}
-	}
+            pool.overflowBehavior = PoolOverflowBehavior.WARNING;
+            Assert.AreEqual(PoolOverflowBehavior.WARNING, pool.overflowBehavior);
 
-	class PooledInstance : IPoolable
-	{
-		public int someValue = 0;
+            pool.overflowBehavior = PoolOverflowBehavior.IGNORE;
+            Assert.AreEqual(PoolOverflowBehavior.IGNORE, pool.overflowBehavior);
 
-		public void Restore ()
-		{
-			someValue = 0;
-		}
+            pool.inflationType = PoolInflationType.DOUBLE;
+            Assert.AreEqual(PoolInflationType.DOUBLE, pool.inflationType);
 
-		public void Retain()
-		{
-		}
+            pool.inflationType = PoolInflationType.INCREMENT;
+            Assert.AreEqual(PoolInflationType.INCREMENT, pool.inflationType);
+        }
+    }
 
-		public void Release()
-		{
-		}
+    internal class PooledInstance : IPoolable
+    {
+        public int someValue;
 
-		public bool retain { get; set; }
-	}
+        public void Restore()
+        {
+            someValue = 0;
+        }
 
-	class TestInstanceProvider : IInstanceProvider
-	{
-		public T GetInstance<T>()
-		{
-			object instance = Activator.CreateInstance (typeof (T));
-			T retv = (T) instance;
-			return retv;
-		}
+        public void Retain()
+        {
+        }
 
-		public object GetInstance(Type key)
-		{
-			return Activator.CreateInstance (key);
-		}
-	}
+        public void Release()
+        {
+        }
+
+        public bool retain { get; set; }
+    }
+
+    internal class TestInstanceProvider : IInstanceProvider
+    {
+        public T GetInstance<T>()
+        {
+            var instance = Activator.CreateInstance(typeof(T));
+            var retv = (T) instance;
+            return retv;
+        }
+
+        public object GetInstance(Type key)
+        {
+            return Activator.CreateInstance(key);
+        }
+    }
 }
-

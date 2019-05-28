@@ -25,17 +25,13 @@
  * dispatcher into a View.
  */
 
-using System;
 using strange.extensions.dispatcher.eventdispatcher.api;
 using Xamarin.Forms;
 
 namespace strange.extensions.mediation.impl
 {
-	public class EventView : Element
-	{
-		[Inject]
-		public IEventDispatcher dispatcher{ get; set;}
-
-	}
+    public class EventView : Element
+    {
+        [Inject] public IEventDispatcher dispatcher { get; set; }
+    }
 }
-

@@ -1,164 +1,155 @@
-
-using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using strange.extensions.command.api;
 using strange.extensions.command.impl;
-using strange.extensions.injector.impl;
 using strange.extensions.injector.api;
-using strange.extensions.pool.impl;
+using strange.extensions.injector.impl;
 using strange.extensions.pool.api;
-using strange.framework.api;
 using strange.extensions.signal.impl;
+using strange.framework.api;
 
 namespace strange.unittests
 {
-	[TestFixture()]
-	public class TestPooledSignalCommands
-	{
-		private ICommandBinder commandBinder;
-		private IPooledCommandBinder pooledCommandBinder;
-		private IInjectionBinder injectionBinder;
-		private Signal<int> singleSignal;
-		private Signal<int, string> doubleSignal;
-		private Signal<int, string, SimpleInterfaceImplementer> tripleSignal;
+    [TestFixture]
+    public class TestPooledSignalCommands
+    {
+        [SetUp]
+        public void SetUp()
+        {
+            injectionBinder = new InjectionBinder();
+            injectionBinder.Bind<IInjectionBinder>().Bind<IInstanceProvider>().ToValue(injectionBinder);
+            injectionBinder.Bind<ICommandBinder>().To<SignalCommandBinder>().ToSingleton();
 
+            commandBinder = injectionBinder.GetInstance<ICommandBinder>();
+            pooledCommandBinder = commandBinder as IPooledCommandBinder;
+            singleSignal = new Signal<int>();
+            doubleSignal = new Signal<int, string>();
+            tripleSignal = new Signal<int, string, SimpleInterfaceImplementer>();
+        }
 
-		[SetUp]
-		public void SetUp()
-		{
-			injectionBinder = new InjectionBinder ();
-			injectionBinder.Bind<IInjectionBinder>().Bind<IInstanceProvider>().ToValue(injectionBinder);
-			injectionBinder.Bind<ICommandBinder> ().To<SignalCommandBinder> ().ToSingleton();
+        [TearDown]
+        public void TearDown()
+        {
+            MarkablePoolCommand.incrementValue = 0;
+        }
 
-			commandBinder = injectionBinder.GetInstance<ICommandBinder> ();
-			pooledCommandBinder = commandBinder as IPooledCommandBinder;
-			singleSignal = new Signal<int>();
-			doubleSignal = new Signal<int, string>();
-			tripleSignal = new Signal<int, string, SimpleInterfaceImplementer>();
-		}
+        private ICommandBinder commandBinder;
+        private IPooledCommandBinder pooledCommandBinder;
+        private IInjectionBinder injectionBinder;
+        private Signal<int> singleSignal;
+        private Signal<int, string> doubleSignal;
+        private Signal<int, string, SimpleInterfaceImplementer> tripleSignal;
 
-		[TearDown]
-		public void TearDown()
-		{
-			MarkablePoolCommand.incrementValue = 0;
-		}
+        private readonly List<SimpleInterfaceImplementer> instanceList = new List<SimpleInterfaceImplementer>();
 
-		[Test]
-		public void TestCommandIsInjected()
-		{
-			injectionBinder.Bind<ISimpleInterface> ().To<SimpleInterfaceImplementer> ();
-			commandBinder.Bind(singleSignal).To<CommandWithInjectionPlusSignalPayload> ().Pooled();
-			TestDelegate testDelegate = delegate 
-			{
-				singleSignal.Dispatch(27);
-			};
-			//If the injected value were not set, this command would throw a Null Pointer Exception
-			Assert.DoesNotThrow (testDelegate);
-		}
+        private void cb(SimpleInterfaceImplementer instance)
+        {
+            instanceList.Add(instance);
+        }
 
-		[Test]
-		public void TestCommandGetsReused()
-		{
-			commandBinder.Bind (singleSignal).To<MarkablePoolCommand> ().Pooled();
-			IPool<MarkablePoolCommand> pool = pooledCommandBinder.GetPool<MarkablePoolCommand> ();
+        [Test]
+        public void TestCleanupInjections()
+        {
+            injectionBinder.Bind<ISimpleInterface>().To<SimpleInterfaceImplementer>();
+            commandBinder.Bind(singleSignal).To<CommandWithInjectionPlusSignalPayload>().Pooled();
 
-			for (int a = 0; a < 10; a++)
-			{
-				singleSignal.Dispatch (a);
-				Assert.AreEqual (a+1, MarkablePoolCommand.incrementValue);
-				Assert.AreEqual (1, pool.instanceCount);
-			}
-		}
+            singleSignal.Dispatch(42);
+            IPool<CommandWithInjectionPlusSignalPayload> pool =
+                pooledCommandBinder.GetPool<CommandWithInjectionPlusSignalPayload>();
 
-		[Test]
-		public void TestCommandBinderHasManyPools()
-		{
-			commandBinder.Bind (singleSignal).To<MarkablePoolCommand> ().Pooled();
-			commandBinder.Bind (doubleSignal).To<CommandWithExecute> ().Pooled();
-			commandBinder.Bind (tripleSignal).To<SequenceCommandWithInjection> ().Pooled();
+            var cmd = pool.GetInstance();
 
-			IPool firstPool = pooledCommandBinder.GetPool<MarkablePoolCommand> ();
-			IPool secondPool = pooledCommandBinder.GetPool<CommandWithExecute> ();
-			IPool thirdPool = pooledCommandBinder.GetPool<SequenceCommandWithInjection> ();
+            Assert.AreEqual(1, pool.instanceCount); //These just assert our expectation that there's one instance
+            Assert.AreEqual(0, pool.available); //and we're looking at it.
 
-			Assert.IsNotNull (firstPool);
-			Assert.IsNotNull (secondPool);
-			Assert.IsNotNull (thirdPool);
+            Assert.IsNull(cmd.injected);
+        }
 
-			Assert.AreNotSame (firstPool, secondPool);
-			Assert.AreNotSame (secondPool, thirdPool);
-			Assert.AreNotSame (thirdPool, firstPool);
-		}
+        [Test]
+        public void TestCommandBinderHasManyPools()
+        {
+            commandBinder.Bind(singleSignal).To<MarkablePoolCommand>().Pooled();
+            commandBinder.Bind(doubleSignal).To<CommandWithExecute>().Pooled();
+            commandBinder.Bind(tripleSignal).To<SequenceCommandWithInjection>().Pooled();
 
-		[Test]
-		public void TestCleanupInjections()
-		{
-			injectionBinder.Bind<ISimpleInterface> ().To<SimpleInterfaceImplementer> ();
-			commandBinder.Bind (singleSignal).To<CommandWithInjectionPlusSignalPayload> ().Pooled();
+            IPool firstPool = pooledCommandBinder.GetPool<MarkablePoolCommand>();
+            IPool secondPool = pooledCommandBinder.GetPool<CommandWithExecute>();
+            IPool thirdPool = pooledCommandBinder.GetPool<SequenceCommandWithInjection>();
 
-			singleSignal.Dispatch (42);
-			IPool<CommandWithInjectionPlusSignalPayload> pool = pooledCommandBinder.GetPool<CommandWithInjectionPlusSignalPayload> ();
+            Assert.IsNotNull(firstPool);
+            Assert.IsNotNull(secondPool);
+            Assert.IsNotNull(thirdPool);
 
-			CommandWithInjectionPlusSignalPayload cmd = pool.GetInstance() as CommandWithInjectionPlusSignalPayload;
+            Assert.AreNotSame(firstPool, secondPool);
+            Assert.AreNotSame(secondPool, thirdPool);
+            Assert.AreNotSame(thirdPool, firstPool);
+        }
 
-			Assert.AreEqual (1, pool.instanceCount);	//These just assert our expectation that there's one instance
-			Assert.AreEqual (0, pool.available);		//and we're looking at it.
+        [Test]
+        public void TestCommandGetsReused()
+        {
+            commandBinder.Bind(singleSignal).To<MarkablePoolCommand>().Pooled();
+            IPool<MarkablePoolCommand> pool = pooledCommandBinder.GetPool<MarkablePoolCommand>();
 
-			Assert.IsNull (cmd.injected);
-		}
+            for (var a = 0; a < 10; a++)
+            {
+                singleSignal.Dispatch(a);
+                Assert.AreEqual(a + 1, MarkablePoolCommand.incrementValue);
+                Assert.AreEqual(1, pool.instanceCount);
+            }
+        }
 
-		[Test]
-		public void TestCommandWorksSecondTime()
-		{
-			injectionBinder.Bind<ISimpleInterface> ().To<SimpleInterfaceImplementer> ();
-			commandBinder.Bind (singleSignal).To<CommandWithInjectionPlusSignalPayload> ().Pooled();
+        [Test]
+        public void TestCommandIsInjected()
+        {
+            injectionBinder.Bind<ISimpleInterface>().To<SimpleInterfaceImplementer>();
+            commandBinder.Bind(singleSignal).To<CommandWithInjectionPlusSignalPayload>().Pooled();
+            TestDelegate testDelegate = delegate { singleSignal.Dispatch(27); };
+            //If the injected value were not set, this command would throw a Null Pointer Exception
+            Assert.DoesNotThrow(testDelegate);
+        }
 
-			singleSignal.Dispatch (42);
-			IPool<CommandWithInjectionPlusSignalPayload> pool = pooledCommandBinder.GetPool<CommandWithInjectionPlusSignalPayload> ();
+        [Test]
+        public void TestCommandWorksSecondTime()
+        {
+            injectionBinder.Bind<ISimpleInterface>().To<SimpleInterfaceImplementer>();
+            commandBinder.Bind(singleSignal).To<CommandWithInjectionPlusSignalPayload>().Pooled();
 
-			CommandWithInjectionPlusSignalPayload cmd = pool.GetInstance () as CommandWithInjectionPlusSignalPayload;
+            singleSignal.Dispatch(42);
+            IPool<CommandWithInjectionPlusSignalPayload> pool =
+                pooledCommandBinder.GetPool<CommandWithInjectionPlusSignalPayload>();
 
-			Assert.AreEqual (1, pool.instanceCount);	//These just assert our expectation that there's one instance
-			Assert.AreEqual (0, pool.available);		//and we're looking at it.
+            var cmd = pool.GetInstance();
 
-			Assert.IsNull (cmd.injected);
+            Assert.AreEqual(1, pool.instanceCount); //These just assert our expectation that there's one instance
+            Assert.AreEqual(0, pool.available); //and we're looking at it.
 
-			TestDelegate testDelegate = delegate 
-			{
-				singleSignal.Dispatch (42);
-			};
-			Assert.DoesNotThrow (testDelegate);
-		}
+            Assert.IsNull(cmd.injected);
 
-		[Test]
-		public void TestFactoryInjectionGivesUniqueInstances()
-		{
-			injectionBinder.Bind<ISimpleInterface> ().To<SimpleInterfaceImplementer> ();
+            TestDelegate testDelegate = delegate { singleSignal.Dispatch(42); };
+            Assert.DoesNotThrow(testDelegate);
+        }
 
-			//This signal we dispatch
-			Signal<Signal<SimpleInterfaceImplementer>> senderSignal = new Signal<Signal<SimpleInterfaceImplementer>> ();
-			//This one is payload
-			Signal<SimpleInterfaceImplementer> payloadSignal = new Signal<SimpleInterfaceImplementer> ();
+        [Test]
+        public void TestFactoryInjectionGivesUniqueInstances()
+        {
+            injectionBinder.Bind<ISimpleInterface>().To<SimpleInterfaceImplementer>();
 
-			commandBinder.Bind (senderSignal).To<CommandWithInjectionAndSignal> ().Pooled();
+            //This signal we dispatch
+            var senderSignal = new Signal<Signal<SimpleInterfaceImplementer>>();
+            //This one is payload
+            var payloadSignal = new Signal<SimpleInterfaceImplementer>();
 
-			payloadSignal.AddListener (cb);
+            commandBinder.Bind(senderSignal).To<CommandWithInjectionAndSignal>().Pooled();
 
-			//Dispatch the senderSignal twice, each time carrying the payloadSignal
-			senderSignal.Dispatch(payloadSignal);
-			senderSignal.Dispatch(payloadSignal);
+            payloadSignal.AddListener(cb);
 
-			Assert.AreEqual (2, instanceList.Count);
-			Assert.AreNotSame (instanceList [0], instanceList [1]);
+            //Dispatch the senderSignal twice, each time carrying the payloadSignal
+            senderSignal.Dispatch(payloadSignal);
+            senderSignal.Dispatch(payloadSignal);
 
-		}
-
-		private List<SimpleInterfaceImplementer> instanceList = new List<SimpleInterfaceImplementer>();
-		private void cb(SimpleInterfaceImplementer instance)
-		{
-			instanceList.Add (instance);
-		}
-	}
+            Assert.AreEqual(2, instanceList.Count);
+            Assert.AreNotSame(instanceList[0], instanceList[1]);
+        }
+    }
 }
-

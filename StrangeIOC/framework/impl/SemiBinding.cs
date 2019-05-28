@@ -22,123 +22,128 @@
  * @see strange.framework.api.ISemiBinding
  */
 
-using System;
 using strange.framework.api;
 
 namespace strange.framework.impl
 {
-	public class SemiBinding : ISemiBinding
-	{
-		protected object[] objectValue;
+    public class SemiBinding : ISemiBinding
+    {
+        protected object[] objectValue;
 
-		public BindingConstraintType constraint{ get; set;}
-		public bool uniqueValues{ get; set;}
+        public SemiBinding()
+        {
+            constraint = BindingConstraintType.ONE;
+            uniqueValues = true;
+        }
 
-		public SemiBinding ()
-		{
-			constraint = BindingConstraintType.ONE;
-			uniqueValues = true;
-		}
+        public BindingConstraintType constraint { get; set; }
+        public bool uniqueValues { get; set; }
 
-		#region IManagedList implementation
+        /// Remove the value at index splicePos
+        protected void spliceValueAt(int splicePos)
+        {
+            var newList = new object[objectValue.Length - 1];
+            var mod = 0;
+            var aa = objectValue.Length;
+            for (var a = 0; a < aa; a++)
+            {
+                if (a == splicePos)
+                {
+                    mod = -1;
+                    continue;
+                }
 
-		public IManagedList Add(object o)
-		{
-			if (objectValue == null || (BindingConstraintType)constraint == BindingConstraintType.ONE)
-			{
-				objectValue = new object[1];
-			}
-			else
-			{
-				if (uniqueValues)
-				{
-					int aa = objectValue.Length;
-					for (int a = 0; a < aa; a++)
-					{
-						object val = objectValue[a];
-						if (val.Equals(o))
-						{
-							return this;
-						}
-					}
-				}
-				
-				object[] tempList = objectValue;
-				int len = tempList.Length;
-				objectValue = new object[len + 1];
-				tempList.CopyTo (objectValue, 0);
-			}
-			objectValue [objectValue.Length - 1] = o;
+                newList[a + mod] = objectValue[a];
+            }
 
-			return this;
-		}
+            objectValue = newList.Length == 0 ? null : newList;
+        }
 
-		public IManagedList Add(object[] list)
-		{
-			foreach (object item in list)
-				Add (item);
+        #region IManagedList implementation
 
-			return this;
-		}
+        public IManagedList Add(object o)
+        {
+            if (objectValue == null || constraint == BindingConstraintType.ONE)
+            {
+                objectValue = new object[1];
+            }
+            else
+            {
+                if (uniqueValues)
+                {
+                    var aa = objectValue.Length;
+                    for (var a = 0; a < aa; a++)
+                    {
+                        var val = objectValue[a];
+                        if (val.Equals(o))
+                        {
+                            return this;
+                        }
+                    }
+                }
 
-		public IManagedList Remove(object o)
-		{
-			if (o.Equals(objectValue) || objectValue == null)
-			{
-				objectValue = null;
-				return this;
-			}
-			int aa = objectValue.Length;
-			for(int a = 0; a < aa; a++)
-			{
-				object currVal = objectValue [a];
-				if (o.Equals(currVal))
-				{
-					spliceValueAt (a);
-					return this;
-				}
-			}
-			return this;
-		}
+                var tempList = objectValue;
+                var len = tempList.Length;
+                objectValue = new object[len + 1];
+                tempList.CopyTo(objectValue, 0);
+            }
 
-		public IManagedList Remove(object[] list)
-		{
-			foreach (object item in list)
-				Remove (item);
+            objectValue[objectValue.Length - 1] = o;
 
-			return this;
-		}
-		virtual public object value
-		{ 
-			get
-			{
-				if (constraint.Equals(BindingConstraintType.ONE))
-				{
-					return (objectValue == null) ? null : objectValue [0];
-				}
-				return objectValue;
-			}
-		}
+            return this;
+        }
 
-		#endregion
+        public IManagedList Add(object[] list)
+        {
+            foreach (var item in list)
+                Add(item);
 
-		/// Remove the value at index splicePos
-		protected void spliceValueAt(int splicePos)
-		{
-			object[] newList = new object[objectValue.Length - 1];
-			int mod = 0;
-			int aa = objectValue.Length;
-			for(int a = 0; a < aa; a++)
-			{
-				if (a == splicePos)
-				{
-					mod = -1;
-					continue;
-				}
-				newList [a + mod] = objectValue [a];
-			}
-			objectValue = (newList.Length == 0) ? null : newList;
-		}
-	}
+            return this;
+        }
+
+        public IManagedList Remove(object o)
+        {
+            if (o.Equals(objectValue) || objectValue == null)
+            {
+                objectValue = null;
+                return this;
+            }
+
+            var aa = objectValue.Length;
+            for (var a = 0; a < aa; a++)
+            {
+                var currVal = objectValue[a];
+                if (o.Equals(currVal))
+                {
+                    spliceValueAt(a);
+                    return this;
+                }
+            }
+
+            return this;
+        }
+
+        public IManagedList Remove(object[] list)
+        {
+            foreach (var item in list)
+                Remove(item);
+
+            return this;
+        }
+
+        public virtual object value
+        {
+            get
+            {
+                if (constraint.Equals(BindingConstraintType.ONE))
+                {
+                    return objectValue == null ? null : objectValue[0];
+                }
+
+                return objectValue;
+            }
+        }
+
+        #endregion
+    }
 }
-

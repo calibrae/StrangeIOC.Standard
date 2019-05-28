@@ -62,23 +62,22 @@
  * to mediate.
  */
 
-using System;
 using strange.framework.api;
 using Xamarin.Forms;
 
 namespace strange.extensions.mediation.api
 {
-	public interface IMediationBinder : IBinder
-	{
-		/// An event that just happened, and the View it happened to.
-		/// If the event was Awake, it will trigger creation of a mapped Mediator.
-		void Trigger (MediationEvent evt, Element view);
+    public interface IMediationBinder : IBinder
+    {
+        /// An event that just happened, and the View it happened to.
+        /// If the event was Awake, it will trigger creation of a mapped Mediator.
+        void Trigger(MediationEvent evt, Element view);
 
-		/// Recast binding as IMediationBinding.
-		new IMediationBinding Bind<T> ();
+        /// Recast binding as IMediationBinding.
+        new IMediationBinding Bind<T>();
 
-		/// Porcelain for Bind<T> providing a little extra clarity and security.
-		IMediationBinding BindView<T> () where T : BindableObject;
-	}
+        /// Porcelain for Bind
+        /// <T> providing a little extra clarity and security.
+        IMediationBinding BindView<T>() where T : BindableObject;
+    }
 }
-

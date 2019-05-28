@@ -19,76 +19,71 @@
  * 
  * A relay for events mapped across multiple Contexts.
  * 
- * This simple class gates events fired by the local Context-wide EventDispatcher.
+ * This simple class gates events fired by the local ViewedContext-wide EventDispatcher.
  * Any event trigger mapped to this Binder will be relayed to the CrossContextDispatcher
  * for consumption by others. This removes the necessity to ever inject the CrossContextDispatcher
  * at an endpoint (e.g., a Command or Mediator).
  * 
  * Because the Bridge itself is mapped cross-context (and
- * therefore shared), it is up to the developer to decide where to make cross-Context the mappings.
+ * therefore shared), it is up to the developer to decide where to make cross-ViewedContext the mappings.
  * 
- * This "freedom" is also a potential pitfall; we recommend that you map all Cross-Context
+ * This "freedom" is also a potential pitfall; we recommend that you map all Cross-ViewedContext
  * events in firstContext to avoid confusion.
  * 
  * Example:
 
 	crossContextBridge.Bind(GameEvent.MISSILE_HIT);
 
- * By doing this from any Context in your app, any Context Dispatcher that fires `GameEvent.MISSILE_HIT` will
+ * By doing this from any ViewedContext in your app, any ViewedContext Dispatcher that fires `GameEvent.MISSILE_HIT` will
  * relay that Event to other Contexts.
  */
 
-using System;
+using System.Collections.Generic;
+using strange.extensions.context.api;
 using strange.extensions.dispatcher.api;
 using strange.extensions.dispatcher.eventdispatcher.api;
-using strange.extensions.context.api;
 using strange.framework.api;
 using strange.framework.impl;
-using System.Collections.Generic;
 
 namespace strange.extensions.context.impl
 {
-	public class CrossContextBridge : Binder, ITriggerable
-	{
-		[Inject(ContextKeys.CROSS_CONTEXT_DISPATCHER)]
-		public IEventDispatcher crossContextDispatcher{ get; set;}
+    public class CrossContextBridge : Binder, ITriggerable
+    {
+        /// Prevents the currently dispatching Event from cycling back on itself
+        protected HashSet<object> eventsInProgress = new HashSet<object>();
 
-		/// Prevents the currently dispatching Event from cycling back on itself
-		protected HashSet<object> eventsInProgress = new HashSet<object>();
+        [Inject(ContextKeys.CROSS_CONTEXT_DISPATCHER)]
+        public IEventDispatcher crossContextDispatcher { get; set; }
 
-		public CrossContextBridge ()
-		{
-		}
+        public override IBinding Bind(object key)
+        {
+            IBinding binding;
+            binding = GetRawBinding();
+            binding.Bind(key);
+            resolver(binding);
+            return binding;
+        }
 
-		override public IBinding Bind(object key)
-		{
-			IBinding binding;
-			binding = GetRawBinding ();
-			binding.Bind(key);
-			resolver (binding);
-			return binding;
-		}
+        #region ITriggerable implementation
 
-		#region ITriggerable implementation
+        public bool Trigger<T>(object data)
+        {
+            return Trigger(typeof(T), data);
+        }
 
-		public bool Trigger<T> (object data)
-		{
-			return Trigger (typeof(T), data);
-		}
+        public bool Trigger(object key, object data)
+        {
+            var binding = GetBinding(key, null);
+            if (binding != null && !eventsInProgress.Contains(key))
+            {
+                eventsInProgress.Add(key);
+                crossContextDispatcher.Dispatch(key, data);
+                eventsInProgress.Remove(key);
+            }
 
-		public bool Trigger (object key, object data)
-		{
-			IBinding binding = GetBinding (key, null);
-			if (binding != null && !eventsInProgress.Contains(key))
-			{
-				eventsInProgress.Add (key);
-				crossContextDispatcher.Dispatch (key, data);
-				eventsInProgress.Remove (key);
-			}
-			return true;
-		}
+            return true;
+        }
 
-		#endregion
-	}
+        #endregion
+    }
 }
-

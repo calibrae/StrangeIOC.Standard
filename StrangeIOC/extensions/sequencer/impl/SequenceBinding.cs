@@ -24,79 +24,78 @@ using System;
 using System.Reflection;
 using strange.extensions.command.impl;
 using strange.extensions.sequencer.api;
-using strange.framework.api;
-using strange.framework.impl;
 using Binder = strange.framework.impl.Binder;
 
 namespace strange.extensions.sequencer.impl
 {
-	public class SequenceBinding : CommandBinding, ISequenceBinding
-	{
-		new public bool isOneOff{ get; set;}
+    public class SequenceBinding : CommandBinding, ISequenceBinding
+    {
+        public SequenceBinding()
+        {
+        }
 
-		public SequenceBinding() : base()
-		{
-		}
+        public SequenceBinding(Binder.BindingResolver resolver) : base(resolver)
+        {
+        }
 
-		public SequenceBinding (Binder.BindingResolver resolver) : base(resolver)
-		{
-		}
+        public new bool isOneOff { get; set; }
 
-		new public ISequenceBinding Once()
-		{
-			isOneOff = true;
-			return this;
-		}
-		
-		//Everything below this point is simply facade on Binding to ensure fluent interface
-		new public ISequenceBinding Bind<T>()
-		{
-			return Bind<T> ();
-		}
+        public new ISequenceBinding Once()
+        {
+            isOneOff = true;
+            return this;
+        }
 
-		new public ISequenceBinding Bind(object key)
-		{
-			return Bind (key);
-		}
+        //Everything below this point is simply facade on Binding to ensure fluent interface
+        public new ISequenceBinding Bind<T>()
+        {
+            return Bind<T>();
+        }
 
-		new public ISequenceBinding To<T>()
-		{
-			return To (typeof(T));
-		}
+        public new ISequenceBinding Bind(object key)
+        {
+            return Bind(key);
+        }
 
-		new public ISequenceBinding To(object o)
-		{
-			Type oType = o as Type;
-			Type sType = typeof(ISequenceCommand);
+        public new ISequenceBinding To<T>()
+        {
+            return To(typeof(T));
+        }
+
+        public new ISequenceBinding To(object o)
+        {
+            var oType = o as Type;
+            var sType = typeof(ISequenceCommand);
 
 
-			if (sType.GetTypeInfo().IsAssignableFrom(oType.GetTypeInfo()) == false)
-			{
-				throw new SequencerException ("Attempt to bind a non SequenceCommand to a Sequence. Perhaps your command needs to extend SequenceCommand or implement ISequenCommand?\n\tType: " + oType.ToString(), SequencerExceptionType.COMMAND_USED_IN_SEQUENCE);
-			}
-			
-			return base.To (o) as ISequenceBinding;
-		}
+            if (sType.GetTypeInfo().IsAssignableFrom(oType.GetTypeInfo()) == false)
+            {
+                throw new SequencerException(
+                    "Attempt to bind a non SequenceCommand to a Sequence. Perhaps your command needs to extend SequenceCommand or implement ISequenCommand?\n\tType: " +
+                    oType, SequencerExceptionType.COMMAND_USED_IN_SEQUENCE);
+            }
 
-		new public ISequenceBinding ToName<T>()
-		{
-			return base.ToName<T> () as ISequenceBinding;
-		}
+            return base.To(o) as ISequenceBinding;
+        }
 
-		new public ISequenceBinding ToName(object o)
-		{
-			return base.ToName (o) as ISequenceBinding;
-		}
+        public new ISequenceBinding ToName<T>()
+        {
+            return base.ToName<T>() as ISequenceBinding;
+        }
 
-		new public ISequenceBinding Named<T>()
-		{
-			return base.Named<T> () as ISequenceBinding;
-		}
+        public new ISequenceBinding ToName(object o)
+        {
+            return base.ToName(o) as ISequenceBinding;
+        }
 
-		new public ISequenceBinding Named(object o)
-		{
-			return base.Named (o) as ISequenceBinding;
-		}
-	}
+        public new ISequenceBinding Named<T>()
+        {
+            return base.Named<T>() as ISequenceBinding;
+        }
+
+        public new ISequenceBinding Named(object o)
+        {
+            return base.Named(o) as ISequenceBinding;
+        }
+    }
 }
-

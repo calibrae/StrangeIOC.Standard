@@ -39,12 +39,12 @@
 
 using System;
 
-[AttributeUsage(AttributeTargets.Method,
-    AllowMultiple = false,
-    Inherited = true)]
+[AttributeUsage(AttributeTargets.Method)]
 public class ListensTo : Attribute
 {
-    public ListensTo() { }
+    public ListensTo()
+    {
+    }
 
     public ListensTo(Type t)
     {

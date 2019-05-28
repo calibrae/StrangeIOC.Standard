@@ -26,136 +26,147 @@ using strange.extensions.promise.api;
 
 namespace strange.extensions.promise.impl
 {
-	public abstract class BasePromise : IBasePromise
-	{
-		private event Action<float> OnProgress;
-		private event Action<Exception> OnFail;
-		private event Action OnFinally;
-		private Exception exception;
+    public abstract class BasePromise : IBasePromise
+    {
+        public enum PromiseState
+        {
+            Fulfilled,
+            Failed,
+            Pending
+        }
 
-		public PromiseState State { get; protected set; }
+        private Exception exception;
 
-		public enum PromiseState
-		{
-			Fulfilled,
-			Failed,
-			Pending,
-		}
+        protected BasePromise()
+        {
+            State = PromiseState.Pending;
+        }
 
-		protected BasePromise()
-		{
-			State = PromiseState.Pending;
-		}
+        protected bool Pending => State == PromiseState.Pending;
+        protected bool Resolved => State != PromiseState.Pending;
+        protected bool Fulfilled => State == PromiseState.Fulfilled;
+        protected bool Failed => State == PromiseState.Failed;
 
-		public void ReportFail(Exception ex)
-		{
-			exception = ex;
-			State = PromiseState.Failed;
-			if (OnFail != null)
-				OnFail(ex);
-			Finally();
-		}
+        public PromiseState State { get; protected set; }
 
-		public void ReportProgress(float progress)
-		{
-			if (OnProgress != null)
-				OnProgress(progress);
-		}
+        public void ReportFail(Exception ex)
+        {
+            exception = ex;
+            State = PromiseState.Failed;
+            if (OnFail != null)
+                OnFail(ex);
+            Finally();
+        }
 
-		/// <summary>
-		/// Returns false if the Promise has yet to be resolved. If resolved,
-		/// sets the state to Fulfilled and returns true.
-		/// </summary>
-		protected bool Fulfill()
-		{
-			if (Resolved) return false;
+        public void ReportProgress(float progress)
+        {
+            if (OnProgress != null)
+                OnProgress(progress);
+        }
 
-			State = PromiseState.Fulfilled;
-			return true;
-		}
+        public IBasePromise Progress(Action<float> listener)
+        {
+            OnProgress = AddUnique(OnProgress, listener);
+            return this;
+        }
 
-		public IBasePromise Progress(Action<float> listener)
-		{
-			OnProgress = AddUnique<float>(OnProgress, listener);
-			return this;
-		}
+        public IBasePromise Fail(Action<Exception> listener)
+        {
+            if (Failed)
+            {
+                listener(exception);
+                Finally();
+            }
+            else
+                OnFail = AddUnique(OnFail, listener);
 
-		public IBasePromise Fail(Action<Exception> listener)
-		{
-			if (Failed)
-			{
-				listener(exception);
-				Finally();
-			}
-			else
-				OnFail = AddUnique<Exception>(OnFail, listener);
-			return this;
-		}
+            return this;
+        }
 
-		public IBasePromise Finally(Action listener)
-		{
-			if (Resolved)
-				listener();
-			else
-				OnFinally = AddUnique(OnFinally, listener);
+        public IBasePromise Finally(Action listener)
+        {
+            if (Resolved)
+                listener();
+            else
+                OnFinally = AddUnique(OnFinally, listener);
 
-			return this;
-		}
+            return this;
+        }
 
-		/// <summary>
-		/// Trigger Finally callbacks
-		/// </summary>
-		protected void Finally()
-		{
-			if (OnFinally != null)
-				OnFinally();
-			RemoveAllListeners();
-		}
+        public void RemoveProgressListeners()
+        {
+            OnProgress = null;
+        }
 
-		public void RemoveProgressListeners() { OnProgress = null; }
-		public void RemoveFailListeners() { OnFail = null; }
-		public virtual void RemoveAllListeners()
-		{
-			OnProgress = null;
-			OnFail = null;
-			OnFinally = null;
-		}
+        public void RemoveFailListeners()
+        {
+            OnFail = null;
+        }
 
-		/// <summary>
-		/// Adds a listener to a callback queue.
-		/// </summary>
-		/// <returns>The complete list of associated listeners.</returns>
-		/// <param name="listeners">Any existing callback queue.</param>
-		/// <param name="callback">A callback to add to the queue.</param>
-		protected Action AddUnique(Action listeners, Action callback)
-		{
-			if (listeners == null || !listeners.GetInvocationList().Contains(callback))
-			{
-				listeners += callback;
-			}
-			return listeners;
-		}
+        public virtual void RemoveAllListeners()
+        {
+            OnProgress = null;
+            OnFail = null;
+            OnFinally = null;
+        }
 
-		/// <summary>
-		/// Adds a listener to a callback queue, specifying the Action parameter Type of the listener.
-		/// </summary>
-		/// <returns>The complete list of associated listeners.</returns>
-		/// <param name="listeners">Any existing callback queue.</param>
-		/// <param name="callback">A callback to add to the queue.</param>
-		protected Action<T> AddUnique<T>(Action<T> listeners, Action<T> callback)
-		{
-			if (listeners == null || !listeners.GetInvocationList().Contains(callback))
-			{
-				listeners += callback;
-			}
-			return listeners;
-		}
+        public abstract int ListenerCount();
+        private event Action<float> OnProgress;
+        private event Action<Exception> OnFail;
+        private event Action OnFinally;
 
-		protected bool Pending { get { return State == PromiseState.Pending; } }
-		protected bool Resolved { get { return State != PromiseState.Pending; } }
-		protected bool Fulfilled { get { return State == PromiseState.Fulfilled; } }
-		protected bool Failed { get { return State == PromiseState.Failed; } }
+        /// <summary>
+        ///     Returns false if the Promise has yet to be resolved. If resolved,
+        ///     sets the state to Fulfilled and returns true.
+        /// </summary>
+        protected bool Fulfill()
+        {
+            if (Resolved) return false;
 
-		public abstract int ListenerCount();
-	}
+            State = PromiseState.Fulfilled;
+            return true;
+        }
+
+        /// <summary>
+        ///     Trigger Finally callbacks
+        /// </summary>
+        protected void Finally()
+        {
+            if (OnFinally != null)
+                OnFinally();
+            RemoveAllListeners();
+        }
+
+        /// <summary>
+        ///     Adds a listener to a callback queue.
+        /// </summary>
+        /// <returns>The complete list of associated listeners.</returns>
+        /// <param name="listeners">Any existing callback queue.</param>
+        /// <param name="callback">A callback to add to the queue.</param>
+        protected Action AddUnique(Action listeners, Action callback)
+        {
+            if (listeners == null || !listeners.GetInvocationList().Contains(callback))
+            {
+                listeners += callback;
+            }
+
+            return listeners;
+        }
+
+        /// <summary>
+        ///     Adds a listener to a callback queue, specifying the Action parameter Type of the listener.
+        /// </summary>
+        /// <returns>The complete list of associated listeners.</returns>
+        /// <param name="listeners">Any existing callback queue.</param>
+        /// <param name="callback">A callback to add to the queue.</param>
+        protected Action<T> AddUnique<T>(Action<T> listeners, Action<T> callback)
+        {
+            if (listeners == null || !listeners.GetInvocationList().Contains(callback))
+            {
+                listeners += callback;
+            }
+
+            return listeners;
+        }
+    }
 }

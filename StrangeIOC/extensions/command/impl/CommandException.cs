@@ -27,19 +27,18 @@ using strange.extensions.command.api;
 
 namespace strange.extensions.command.impl
 {
-	public class CommandException : Exception
-	{
-		public CommandExceptionType type{ get; set;}
+    public class CommandException : Exception
+    {
+        public CommandException()
+        {
+        }
 
-		public CommandException () : base()
-		{
-		}
+        /// Constructs a CommandException with a message and CommandExceptionType
+        public CommandException(string message, CommandExceptionType exceptionType) : base(message)
+        {
+            type = exceptionType;
+        }
 
-		/// Constructs a CommandException with a message and CommandExceptionType
-		public CommandException(string message, CommandExceptionType exceptionType) : base(message)
-		{
-			type = exceptionType;
-		}
-	}
+        public CommandExceptionType type { get; set; }
+    }
 }
-

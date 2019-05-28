@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Runtime;
-using strange.extensions.context.api;
-using strange.extensions.context.impl;
+﻿using strange.extensions.context.api;
 using strange.extensions.mediation.api;
 using Xamarin.Forms;
 
@@ -15,15 +8,16 @@ namespace strange.extensions.context.impl
     {
         public new Page MainPage
         {
-            get { return base.MainPage; }
+            get => base.MainPage;
             set
             {
                 if (base.MainPage != null)
                 {
-                    ((XamarinContext)context).mediationBinder.Trigger(MediationEvent.DESTROYED, base.MainPage);
+                    ((XamarinContext) context).mediationBinder.Trigger(MediationEvent.DESTROYED, base.MainPage);
                 }
+
                 base.MainPage = value;
-                ((XamarinContext)context).mediationBinder.Trigger(MediationEvent.AWAKE, value);
+                ((XamarinContext) context).mediationBinder.Trigger(MediationEvent.AWAKE, value);
             }
         }
 

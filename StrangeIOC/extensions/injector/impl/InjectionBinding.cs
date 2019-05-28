@@ -23,215 +23,196 @@
  */
 
 using System;
+using strange.extensions.injector.api;
 using strange.framework.api;
 using strange.framework.impl;
-using strange.extensions.injector.api;
 
 namespace strange.extensions.injector.impl
 {
-	public class InjectionBinding : Binding, IInjectionBinding
-	{
-		private InjectionBindingType _type = InjectionBindingType.DEFAULT;
-		private bool _toInject = true;
-		private bool _isCrossContext = false;
+    public class InjectionBinding : Binding, IInjectionBinding
+    {
+        private readonly ISemiBinding supplyList = new SemiBinding();
 
-		private ISemiBinding supplyList = new SemiBinding ();
+        public InjectionBinding(Binder.BindingResolver resolver)
+        {
+            this.resolver = resolver;
+            keyConstraint = BindingConstraintType.MANY;
+            valueConstraint = BindingConstraintType.ONE;
+            supplyList.constraint = BindingConstraintType.MANY;
+        }
 
-		public InjectionBinding (Binder.BindingResolver resolver)
-		{
-			this.resolver = resolver;
-			keyConstraint = BindingConstraintType.MANY;
-			valueConstraint = BindingConstraintType.ONE;
-			supplyList.constraint = BindingConstraintType.MANY;
-		}
+        public InjectionBindingType type { get; set; } = InjectionBindingType.DEFAULT;
 
-		public InjectionBindingType type
-		{
-			get
-			{
-				return _type;
-			}
-			set
-			{
-				_type = value;
-			}
-		}
-		
-		public bool toInject
-		{
-			get
-			{
-				return _toInject;
-			}
-		}
+        public bool toInject { get; private set; } = true;
 
-		public IInjectionBinding ToInject(bool value)
-		{
-			_toInject = value;
-			return this;
-		}
+        public IInjectionBinding ToInject(bool value)
+        {
+            toInject = value;
+            return this;
+        }
 
-		public bool isCrossContext
-		{
-			get
-			{
-				return _isCrossContext;
-			}
-		}
+        public bool isCrossContext { get; private set; }
 
-		public IInjectionBinding ToSingleton()
-		{
-			//If already a value, this mapping is redundant
-			if (type == InjectionBindingType.VALUE)
-				return this;
+        public IInjectionBinding ToSingleton()
+        {
+            //If already a value, this mapping is redundant
+            if (type == InjectionBindingType.VALUE)
+                return this;
 
-			type = InjectionBindingType.SINGLETON;
-			if (resolver != null)
-			{
-				resolver (this);
-			}
-			return this;
-		}
+            type = InjectionBindingType.SINGLETON;
+            if (resolver != null)
+            {
+                resolver(this);
+            }
 
-		public IInjectionBinding ToValue (object o)
-		{
-			type = InjectionBindingType.VALUE;
-			SetValue(o);
-			return this;
-		}
+            return this;
+        }
 
-		public IInjectionBinding SetValue(object o)
-		{
+        public IInjectionBinding ToValue(object o)
+        {
+            type = InjectionBindingType.VALUE;
+            SetValue(o);
+            return this;
+        }
 
-			Type objType = o.GetType();
+        public IInjectionBinding SetValue(object o)
+        {
+            var objType = o.GetType();
 
-			object[] keys = key as object[];
-			int aa = keys.Length;
-			//Check that value is legal for the provided keys
-			for (int a = 0; a < aa; a++)
-			{
-				object aKey = keys[a];
-				Type keyType = (aKey is Type) ? aKey as Type : aKey.GetType();
-				if (keyType.IsAssignableFrom(objType) == false && (HasGenericAssignableFrom(keyType, objType) == false))
-				{
-					throw new InjectionException("Injection cannot bind a value that does not extend or implement the binding type.", InjectionExceptionType.ILLEGAL_BINDING_VALUE);
-				}
-			}
-			To(o);
-			return this;
-		}
+            var keys = key as object[];
+            var aa = keys.Length;
+            //Check that value is legal for the provided keys
+            for (var a = 0; a < aa; a++)
+            {
+                var aKey = keys[a];
+                var keyType = aKey is Type ? aKey as Type : aKey.GetType();
+                if (keyType.IsAssignableFrom(objType) == false && HasGenericAssignableFrom(keyType, objType) == false)
+                {
+                    throw new InjectionException(
+                        "Injection cannot bind a value that does not extend or implement the binding type.",
+                        InjectionExceptionType.ILLEGAL_BINDING_VALUE);
+                }
+            }
 
-		protected bool HasGenericAssignableFrom(Type keyType, Type objType)
-		{
-			//FIXME: We need to figure out how to determine generic assignability
-			if (keyType.IsGenericType == false)
-				return false;
+            To(o);
+            return this;
+        }
 
-			return true;
-		}
+        public IInjectionBinding CrossContext()
+        {
+            isCrossContext = true;
+            if (resolver != null)
+            {
+                resolver(this);
+            }
 
-		protected bool IsGenericTypeAssignable(Type givenType, Type genericType)
-		{
-			var interfaceTypes = givenType.GetInterfaces();
+            return this;
+        }
 
-			foreach (var it in interfaceTypes)
-			{
-				if (it.IsGenericType && it.GetGenericTypeDefinition() == genericType)
-					return true;
-			}
+        /// Promise this Binding to any instance of Type
+        /// <T>
+        public IInjectionBinding SupplyTo<T>()
+        {
+            return SupplyTo(typeof(T));
+        }
 
-			if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
-				return true;
+        /// Promise this Binding to any instance of Type type
+        public IInjectionBinding SupplyTo(Type type)
+        {
+            supplyList.Add(type);
+            if (resolver != null)
+            {
+                resolver(this);
+            }
 
-			Type baseType = givenType.BaseType;
-			if (baseType == null) return false;
+            return this;
+        }
 
-			return IsGenericTypeAssignable(baseType, genericType);
-		}
+        /// Remove the promise to supply this binding to Type
+        /// <T>
+        public IInjectionBinding Unsupply<T>()
+        {
+            return Unsupply(typeof(T));
+        }
 
-		public IInjectionBinding CrossContext()
-		{
-			_isCrossContext = true;
-			if (resolver != null)
-			{
-				resolver(this);
-			}
-			return this;
-		}
+        /// Remove the promise to supply this binding to Type type
+        public IInjectionBinding Unsupply(Type type)
+        {
+            supplyList.Remove(type);
+            return this;
+        }
 
-		/// Promise this Binding to any instance of Type <T>
-		public IInjectionBinding SupplyTo<T>()
-		{
-			return SupplyTo (typeof (T));
-		}
+        public object[] GetSupply()
+        {
+            return supplyList.value as object[];
+        }
 
-		/// Promise this Binding to any instance of Type type
-		public IInjectionBinding SupplyTo(Type type)
-		{
-			supplyList.Add (type);
-			if (resolver != null)
-			{
-				resolver(this);
-			}
-			return this;
-		}
+        public new IInjectionBinding Bind<T>()
+        {
+            return base.Bind<T>() as IInjectionBinding;
+        }
 
-		/// Remove the promise to supply this binding to Type <T>
-		public IInjectionBinding Unsupply<T>()
-		{
-			return Unsupply (typeof (T));
-		}
+        public new IInjectionBinding Bind(object key)
+        {
+            return base.Bind(key) as IInjectionBinding;
+        }
 
-		/// Remove the promise to supply this binding to Type type
-		public IInjectionBinding Unsupply(Type type)
-		{
-			supplyList.Remove (type);
-			return this;
-		}
+        public new IInjectionBinding To<T>()
+        {
+            return base.To<T>() as IInjectionBinding;
+        }
 
-		public object[] GetSupply()
-		{
-			return supplyList.value as object[];
-		}
+        public new IInjectionBinding To(object o)
+        {
+            return base.To(o) as IInjectionBinding;
+        }
 
-		new public IInjectionBinding Bind<T>()
-		{
-			return base.Bind<T> () as IInjectionBinding;
-		}
+        public new IInjectionBinding ToName<T>()
+        {
+            return base.ToName<T>() as IInjectionBinding;
+        }
 
-		new public IInjectionBinding Bind(object key)
-		{
-			return base.Bind (key) as IInjectionBinding;
-		}
+        public new IInjectionBinding ToName(object o)
+        {
+            return base.ToName(o) as IInjectionBinding;
+        }
 
-		new public IInjectionBinding To<T>()
-		{
-			return base.To<T> () as IInjectionBinding;
-		}
+        public new IInjectionBinding Named<T>()
+        {
+            return base.Named<T>() as IInjectionBinding;
+        }
 
-		new public IInjectionBinding To(object o)
-		{
-			return base.To (o) as IInjectionBinding;
-		}
+        public new IInjectionBinding Named(object o)
+        {
+            return base.Named(o) as IInjectionBinding;
+        }
 
-		new public IInjectionBinding ToName<T>()
-		{
-			return base.ToName<T> () as IInjectionBinding;
-		}
+        protected bool HasGenericAssignableFrom(Type keyType, Type objType)
+        {
+            //FIXME: We need to figure out how to determine generic assignability
+            if (keyType.IsGenericType == false)
+                return false;
 
-		new public IInjectionBinding ToName(object o)
-		{
-			return base.ToName (o) as IInjectionBinding;
-		}
+            return true;
+        }
 
-		new public IInjectionBinding Named<T>()
-		{
-			return base.Named<T> () as IInjectionBinding;
-		}
+        protected bool IsGenericTypeAssignable(Type givenType, Type genericType)
+        {
+            var interfaceTypes = givenType.GetInterfaces();
 
-		new public IInjectionBinding Named(object o)
-		{
-			return base.Named (o) as IInjectionBinding;
-		}
-	}
+            foreach (var it in interfaceTypes)
+            {
+                if (it.IsGenericType && it.GetGenericTypeDefinition() == genericType)
+                    return true;
+            }
+
+            if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
+                return true;
+
+            var baseType = givenType.BaseType;
+            if (baseType == null) return false;
+
+            return IsGenericTypeAssignable(baseType, genericType);
+        }
+    }
 }

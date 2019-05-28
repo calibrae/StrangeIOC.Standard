@@ -63,67 +63,67 @@ using strange.framework.api;
 
 namespace strange.extensions.injector.api
 {
-	public interface IInjectionBinder : IInstanceProvider
-	{
-		/// Get or set an Injector to use. By default, Injector instantiates it's own, but that can be overridden.
-		IInjector injector{ get; set;}
+    public interface IInjectionBinder : IInstanceProvider
+    {
+        /// Get or set an Injector to use. By default, Injector instantiates it's own, but that can be overridden.
+        IInjector injector { get; set; }
 
-		/// Retrieve an Instance based on a key/name combo.
-		/// ex. `injectionBinder.Get(typeof(ISomeInterface), SomeEnum.MY_ENUM);`
-		object GetInstance(Type key, object name);
+        /// Retrieve an Instance based on a key/name combo.
+        /// ex. `injectionBinder.Get(typeof(ISomeInterface), SomeEnum.MY_ENUM);`
+        object GetInstance(Type key, object name);
 
-		/// Retrieve an Instance based on a key/name combo.
-		/// ex. `injectionBinder.Get<cISomeInterface>(SomeEnum.MY_ENUM);`
-		T GetInstance<T>(object name);
+        /// Retrieve an Instance based on a key/name combo.
+        /// ex. `injectionBinder.Get
+        /// <cISomeInterface>(SomeEnum.MY_ENUM);`
+        T GetInstance<T>(object name);
 
-		/// Get a binding bound to the injection Type and promised to the target Type
-		IInjectionBinding GetSupplier(Type injectionType, Type targetType);
+        /// Get a binding bound to the injection Type and promised to the target Type
+        IInjectionBinding GetSupplier(Type injectionType, Type targetType);
 
-		/// Reflect all the types in the list
-		/// Return the number of types in the list, which should be equal to the list length
-		int Reflect(List<Type> list);
+        /// Reflect all the types in the list
+        /// Return the number of types in the list, which should be equal to the list length
+        int Reflect(List<Type> list);
 
-		/// Reflect all the types currently registered with InjectionBinder
-		/// Return the number of types reflected, which should be equal to the number
-		/// of concrete classes you've mapped.
-		int ReflectAll();
+        /// Reflect all the types currently registered with InjectionBinder
+        /// Return the number of types reflected, which should be equal to the number
+        /// of concrete classes you've mapped.
+        int ReflectAll();
 
-		/// <summary>
-		/// Places individual Bindings into the bindings Dictionary as part of the resolving process
-		/// </summary>
-		/// Note that while some Bindings may store multiple keys, each key takes a unique position in the
-		/// bindings Dictionary.
-		/// 
-		/// Conflicts in the course of fluent binding are expected, but GetBinding
-		/// will throw an error if there are any unresolved conflicts.
-		void ResolveBinding(IBinding binding, object key);
+        /// <summary>
+        ///     Places individual Bindings into the bindings Dictionary as part of the resolving process
+        /// </summary>
+        /// Note that while some Bindings may store multiple keys, each key takes a unique position in the
+        /// bindings Dictionary.
+        /// 
+        /// Conflicts in the course of fluent binding are expected, but GetBinding
+        /// will throw an error if there are any unresolved conflicts.
+        void ResolveBinding(IBinding binding, object key);
 
-		/// <summary>
-		/// Remove the supply binding for the specified injection Type T and target Type U.
-		void Unsupply<T, U>();
+        /// <summary>
+        ///     Remove the supply binding for the specified injection Type T and target Type U.
+        void Unsupply<T, U>();
 
-		/// <summary>
-		/// Remove the supply binding for the specified injection Type and target Type.
-		void Unsupply(Type injectionType, Type targetType);
+        /// <summary>
+        ///     Remove the supply binding for the specified injection Type and target Type.
+        void Unsupply(Type injectionType, Type targetType);
 
-		IInjectionBinding Bind<T>();
-		IInjectionBinding Bind(Type key);
-		IBinding Bind(object key);
-		IInjectionBinding GetBinding<T>();
-		IInjectionBinding GetBinding<T>(object name);
-		IInjectionBinding GetBinding(object key);
-		IInjectionBinding GetBinding(object key, object name);
-		void Unbind<T>();
-		void Unbind<T>(object name);
-		void Unbind (object key);
-		void Unbind (object key, object name);
-		void Unbind (IBinding binding);
+        IInjectionBinding Bind<T>();
+        IInjectionBinding Bind(Type key);
+        IBinding Bind(object key);
+        IInjectionBinding GetBinding<T>();
+        IInjectionBinding GetBinding<T>(object name);
+        IInjectionBinding GetBinding(object key);
+        IInjectionBinding GetBinding(object key, object name);
+        void Unbind<T>();
+        void Unbind<T>(object name);
+        void Unbind(object key);
+        void Unbind(object key, object name);
+        void Unbind(IBinding binding);
 
-		/// For consumed bindings, provide a secure whitelist of legal bindings
-		void WhitelistBindings(List<object> list);
+        /// For consumed bindings, provide a secure whitelist of legal bindings
+        void WhitelistBindings(List<object> list);
 
-		/// Provide the Binder with JSON data to perform dynamic runtime binding
-		void ConsumeBindings(string jsonString);
-	}
+        /// Provide the Binder with JSON data to perform dynamic runtime binding
+        void ConsumeBindings(string jsonString);
+    }
 }
-

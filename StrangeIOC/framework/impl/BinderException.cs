@@ -20,19 +20,18 @@ using strange.framework.api;
 
 namespace strange.framework.impl
 {
-	public class BinderException : Exception
-	{
-		public BinderExceptionType type{ get; set;}
+    public class BinderException : Exception
+    {
+        public BinderException()
+        {
+        }
 
-		public BinderException() : base()
-		{
-		}
+        /// Constructs a BinderException with a message and BinderExceptionType
+        public BinderException(string message, BinderExceptionType exceptionType) : base(message)
+        {
+            type = exceptionType;
+        }
 
-		/// Constructs a BinderException with a message and BinderExceptionType
-		public BinderException(string message, BinderExceptionType exceptionType) : base(message)
-		{
-			type = exceptionType;
-		}
-	}
+        public BinderExceptionType type { get; set; }
+    }
 }
-

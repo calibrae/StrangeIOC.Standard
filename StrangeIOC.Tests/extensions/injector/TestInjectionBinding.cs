@@ -1,194 +1,191 @@
 using System;
-using System.Diagnostics;
 using NUnit.Framework;
-using strange.framework.api;
-using strange.framework.impl;
 using strange.extensions.injector.api;
 using strange.extensions.injector.impl;
-
+using strange.framework.api;
+using strange.framework.impl;
 
 namespace strange.unittests
 {
-	[TestFixture()]
-	public class TestInjectionBinding
-	{
-		[Test]
-		public void TestDefaultType ()
-		{
-			const string TEST_KEY = "TEST_KEY";
-			Binder.BindingResolver resolver = delegate (IBinding binding)
-			{
-				(binding as IInjectionBinding).type = InjectionBindingType.DEFAULT;
-				Assert.That (TEST_KEY == binding.value as string);
-				Assert.That ((binding as InjectionBinding).type == InjectionBindingType.DEFAULT);
-			};
-			InjectionBinding defaultBinding = new InjectionBinding (resolver);
-			defaultBinding.To (TEST_KEY);
-		}
+    [TestFixture]
+    public class TestInjectionBinding
+    {
+        [Test]
+        public void TestDefaultType()
+        {
+            const string TEST_KEY = "TEST_KEY";
+            Binder.BindingResolver resolver = delegate(IBinding binding)
+            {
+                (binding as IInjectionBinding).type = InjectionBindingType.DEFAULT;
+                Assert.That(TEST_KEY == binding.value as string);
+                Assert.That((binding as InjectionBinding).type == InjectionBindingType.DEFAULT);
+            };
+            var defaultBinding = new InjectionBinding(resolver);
+            defaultBinding.To(TEST_KEY);
+        }
 
-		[Test]
-		public void TestSingletonType ()
-		{
-			const string TEST_KEY = "TEST_KEY";
-			Binder.BindingResolver resolver = delegate (IBinding binding)
-			{
-				(binding as IInjectionBinding).type = InjectionBindingType.SINGLETON;
-				Assert.That (TEST_KEY == binding.value as string);
-				Assert.That ((binding as InjectionBinding).type == InjectionBindingType.SINGLETON);
-			};
-			InjectionBinding defaultBinding = new InjectionBinding (resolver);
-			defaultBinding.To (TEST_KEY);
-		}
+        [Test]
+        public void TestGetSupply()
+        {
+            var supplied = new Type[3];
+            supplied[0] = typeof(HasANamedInjection);
+            supplied[1] = typeof(HasANamedInjection2);
+            supplied[2] = typeof(InjectsClassToBeInjected);
+            var iterator = 0;
 
-		[Test]
-		public void TestValueType ()
-		{
-			const string TEST_KEY = "TEST_KEY";
-			Binder.BindingResolver resolver = delegate (IBinding binding)
-			{
-				(binding as IInjectionBinding).type = InjectionBindingType.VALUE;
-				Assert.That (TEST_KEY == binding.value as string);
-				Assert.That ((binding as InjectionBinding).type == InjectionBindingType.VALUE);
-			};
-			InjectionBinding defaultBinding = new InjectionBinding (resolver);
-			defaultBinding.To (TEST_KEY);
-		}
+            Binder.BindingResolver resolver = delegate(IBinding bound)
+            {
+                var value = (bound as IInjectionBinding).GetSupply();
+                Assert.AreEqual(value[value.Length - 1], supplied[iterator]);
+            };
 
-		[Test]
-		public void TestSingletonChainBinding ()
-		{
-			int a = 0;
+            var binding = new InjectionBinding(resolver);
 
-			Binder.BindingResolver resolver = delegate (IBinding binding)
-			{
-				Assert.That (binding.value == typeof(InjectableDerivedClass));
-				InjectionBindingType correctType = (a == 0) ? InjectionBindingType.DEFAULT : InjectionBindingType.SINGLETON;
-				Assert.That ((binding as InjectionBinding).type == correctType);
-				a++;
-			};
-			new InjectionBinding (resolver).Bind<InjectableSuperClass> ().To<InjectableDerivedClass> ().ToSingleton ();
-		}
+            while (iterator < 3)
+            {
+                binding.SupplyTo(supplied[iterator]);
+                iterator++;
+            }
 
-		[Test]
-		public void TestValueChainBinding ()
-		{
-			int a = 0;
-			InjectableDerivedClass testValue = new InjectableDerivedClass ();
+            var supply = binding.GetSupply();
+            Assert.AreEqual(3, supply.Length);
 
-			Binder.BindingResolver resolver = delegate (IBinding binding)
-			{
-				if (a == 2)
-				{
-					Assert.That (binding.value == testValue);
-					InjectionBindingType correctType = (a == 0) ? InjectionBindingType.DEFAULT : InjectionBindingType.VALUE;
-					Assert.That ((binding as InjectionBinding).type == correctType);
-				}
-				a++;
-			};
-			new InjectionBinding (resolver).Bind<InjectableSuperClass>().To<InjectableDerivedClass>().ToValue (testValue);
-		}
+            for (var a = 0; a < supply.Length; a++)
+            {
+                Assert.AreEqual(supply[a], supplied[a]);
+            }
+        }
 
-		[Test]
-		public void TestIllegalValueBinding ()
-		{
-			MarkerClass illegalValue = new MarkerClass ();
+        [Test]
+        public void TestIllegalValueBinding()
+        {
+            var illegalValue = new MarkerClass();
 
-			Binder.BindingResolver resolver = delegate (IBinding binding){};
-			TestDelegate testDelegate = delegate()
-			{
-				new InjectionBinding (resolver).Bind<InjectableSuperClass> ().To<InjectableDerivedClass> ().ToValue (illegalValue);
-			};
-			InjectionException ex = 
-				Assert.Throws<InjectionException> (testDelegate);
-			Assert.That (ex.type == InjectionExceptionType.ILLEGAL_BINDING_VALUE);
-		}
+            Binder.BindingResolver resolver = delegate { };
+            TestDelegate testDelegate = delegate
+            {
+                new InjectionBinding(resolver).Bind<InjectableSuperClass>().To<InjectableDerivedClass>()
+                    .ToValue(illegalValue);
+            };
+            var ex =
+                Assert.Throws<InjectionException>(testDelegate);
+            Assert.That(ex.type == InjectionExceptionType.ILLEGAL_BINDING_VALUE);
+        }
 
-		[Test]
-		public void TestSupplyOne()
-		{
-			Binder.BindingResolver resolver = delegate (IBinding bound)
-			{
-				object[] value = (bound as IInjectionBinding).GetSupply();
-				Assert.AreEqual(value[0], typeof(HasANamedInjection));
-			};
-			InjectionBinding binding = new InjectionBinding (resolver);
-			binding.SupplyTo<HasANamedInjection> ();
-		}
+        [Test]
+        public void TestSingletonChainBinding()
+        {
+            var a = 0;
 
-		[Test]
-		public void TestSupplySeveral()
-		{
-			Type[] supplied = new Type[3];
-			supplied [0] = typeof (HasANamedInjection);
-			supplied [1] = typeof (HasANamedInjection2);
-			supplied [2] = typeof (InjectsClassToBeInjected);
-			int iterator = 0;
-			int resolveIterator = 0;
+            Binder.BindingResolver resolver = delegate(IBinding binding)
+            {
+                Assert.That(binding.value == typeof(InjectableDerivedClass));
+                var correctType = a == 0 ? InjectionBindingType.DEFAULT : InjectionBindingType.SINGLETON;
+                Assert.That((binding as InjectionBinding).type == correctType);
+                a++;
+            };
+            new InjectionBinding(resolver).Bind<InjectableSuperClass>().To<InjectableDerivedClass>().ToSingleton();
+        }
 
-			Binder.BindingResolver resolver = delegate (IBinding bound)
-			{
-				object[] value = (bound as IInjectionBinding).GetSupply();
-				Assert.AreEqual(value[value.Length-1], supplied[iterator]);
-				resolveIterator ++;
-			};
+        [Test]
+        public void TestSingletonType()
+        {
+            const string TEST_KEY = "TEST_KEY";
+            Binder.BindingResolver resolver = delegate(IBinding binding)
+            {
+                (binding as IInjectionBinding).type = InjectionBindingType.SINGLETON;
+                Assert.That(TEST_KEY == binding.value as string);
+                Assert.That((binding as InjectionBinding).type == InjectionBindingType.SINGLETON);
+            };
+            var defaultBinding = new InjectionBinding(resolver);
+            defaultBinding.To(TEST_KEY);
+        }
 
-			InjectionBinding binding = new InjectionBinding (resolver);
+        [Test]
+        public void TestSupplyOne()
+        {
+            Binder.BindingResolver resolver = delegate(IBinding bound)
+            {
+                var value = (bound as IInjectionBinding).GetSupply();
+                Assert.AreEqual(value[0], typeof(HasANamedInjection));
+            };
+            var binding = new InjectionBinding(resolver);
+            binding.SupplyTo<HasANamedInjection>();
+        }
 
-			while (iterator < 3)
-			{
-				binding.SupplyTo (supplied[iterator]);
-				iterator++;
-			}
+        [Test]
+        public void TestSupplySeveral()
+        {
+            var supplied = new Type[3];
+            supplied[0] = typeof(HasANamedInjection);
+            supplied[1] = typeof(HasANamedInjection2);
+            supplied[2] = typeof(InjectsClassToBeInjected);
+            var iterator = 0;
+            var resolveIterator = 0;
 
-			Assert.AreEqual (3, resolveIterator);
-		}
+            Binder.BindingResolver resolver = delegate(IBinding bound)
+            {
+                var value = (bound as IInjectionBinding).GetSupply();
+                Assert.AreEqual(value[value.Length - 1], supplied[iterator]);
+                resolveIterator++;
+            };
 
-		[Test]
-		public void TestUnsupply()
-		{
-			Binder.BindingResolver resolver = delegate (IBinding bound)
-			{
-			};
-			InjectionBinding binding = new InjectionBinding (resolver);
-			binding.To<ClassToBeInjected>().SupplyTo<HasANamedInjection> ();
-			Assert.AreEqual (typeof(HasANamedInjection), binding.GetSupply()[0]);
-			Assert.AreEqual (typeof(ClassToBeInjected), binding.value);
+            var binding = new InjectionBinding(resolver);
 
-			binding.Unsupply<HasANamedInjection> ();
-			Assert.IsNull (binding.GetSupply());
-		}
+            while (iterator < 3)
+            {
+                binding.SupplyTo(supplied[iterator]);
+                iterator++;
+            }
 
-		[Test]
-		public void TestGetSupply()
-		{
-			Type[] supplied = new Type[3];
-			supplied [0] = typeof (HasANamedInjection);
-			supplied [1] = typeof (HasANamedInjection2);
-			supplied [2] = typeof (InjectsClassToBeInjected);
-			int iterator = 0;
+            Assert.AreEqual(3, resolveIterator);
+        }
 
-			Binder.BindingResolver resolver = delegate (IBinding bound)
-			{
-				object[] value = (bound as IInjectionBinding).GetSupply();
-				Assert.AreEqual(value[value.Length-1], supplied[iterator]);
-			};
+        [Test]
+        public void TestUnsupply()
+        {
+            Binder.BindingResolver resolver = delegate { };
+            var binding = new InjectionBinding(resolver);
+            binding.To<ClassToBeInjected>().SupplyTo<HasANamedInjection>();
+            Assert.AreEqual(typeof(HasANamedInjection), binding.GetSupply()[0]);
+            Assert.AreEqual(typeof(ClassToBeInjected), binding.value);
 
-			InjectionBinding binding = new InjectionBinding (resolver);
+            binding.Unsupply<HasANamedInjection>();
+            Assert.IsNull(binding.GetSupply());
+        }
 
-			while (iterator < 3)
-			{
-				binding.SupplyTo (supplied[iterator]);
-				iterator++;
-			}
+        [Test]
+        public void TestValueChainBinding()
+        {
+            var a = 0;
+            var testValue = new InjectableDerivedClass();
 
-			object[] supply = binding.GetSupply ();
-			Assert.AreEqual (3, supply.Length);
+            Binder.BindingResolver resolver = delegate(IBinding binding)
+            {
+                if (a == 2)
+                {
+                    Assert.That(binding.value == testValue);
+                    var correctType = a == 0 ? InjectionBindingType.DEFAULT : InjectionBindingType.VALUE;
+                    Assert.That((binding as InjectionBinding).type == correctType);
+                }
 
-			for (var a = 0; a < supply.Length; a++)
-			{
-				Assert.AreEqual (supply[a], supplied[a]);
-			}
-		}
-	}
+                a++;
+            };
+            new InjectionBinding(resolver).Bind<InjectableSuperClass>().To<InjectableDerivedClass>().ToValue(testValue);
+        }
+
+        [Test]
+        public void TestValueType()
+        {
+            const string TEST_KEY = "TEST_KEY";
+            Binder.BindingResolver resolver = delegate(IBinding binding)
+            {
+                (binding as IInjectionBinding).type = InjectionBindingType.VALUE;
+                Assert.That(TEST_KEY == binding.value as string);
+                Assert.That((binding as InjectionBinding).type == InjectionBindingType.VALUE);
+            };
+            var defaultBinding = new InjectionBinding(resolver);
+            defaultBinding.To(TEST_KEY);
+        }
+    }
 }
-

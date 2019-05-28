@@ -51,15 +51,12 @@
  * See Command for details on asynchronous Commands and cancelling sequences.
  */
 
-using System;
-using strange.extensions.injector.api;
 using strange.framework.api;
 
 namespace strange.extensions.command.api
 {
     public interface ICommandBinder : IBinder
     {
-
         /// Trigger a key that unlocks one or more Commands
         void ReactTo(object trigger);
 
@@ -83,4 +80,3 @@ namespace strange.extensions.command.api
         new ICommandBinding GetBinding<T>();
     }
 }
-

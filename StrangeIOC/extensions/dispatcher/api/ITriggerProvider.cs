@@ -28,20 +28,17 @@
  * @see strange.extensions.dispatcher.api.ITriggerable
  */
 
-using System;
-
 namespace strange.extensions.dispatcher.api
 {
-	public interface ITriggerProvider
-	{
-		/// Register a Triggerable client with this provider.
-		void AddTriggerable(ITriggerable target);
+    public interface ITriggerProvider
+    {
+        /// Count of the current number of trigger clients.
+        int Triggerables { get; }
 
-		/// Remove a previously registered Triggerable client from this provider.
-		void RemoveTriggerable(ITriggerable target);
+        /// Register a Triggerable client with this provider.
+        void AddTriggerable(ITriggerable target);
 
-		/// Count of the current number of trigger clients.
-		int Triggerables{ get;}
-	}
+        /// Remove a previously registered Triggerable client from this provider.
+        void RemoveTriggerable(ITriggerable target);
+    }
 }
-

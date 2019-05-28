@@ -32,56 +32,51 @@ using strange.extensions.pool.api;
 
 namespace strange.extensions.dispatcher.eventdispatcher.impl
 {
-	public class TmEvent : IEvent, IPoolable
-	{
-		public object type{ get; set; }
-		public IEventDispatcher target{ get; set; }
-		public object data{ get; set; }
+    public class TmEvent : IEvent, IPoolable
+    {
+        protected int retainCount;
 
-		protected int retainCount;
+        public TmEvent()
+        {
+        }
 
-		public TmEvent()
-		{
-		}
+        /// Construct a TmEvent
+        public TmEvent(object type, IEventDispatcher target, object data)
+        {
+            this.type = type;
+            this.target = target;
+            this.data = data;
+        }
 
-		/// Construct a TmEvent
-		public TmEvent(object type, IEventDispatcher target, object data)
-		{
-			this.type = type;
-			this.target = target;
-			this.data = data;
-		}
+        public object type { get; set; }
+        public IEventDispatcher target { get; set; }
+        public object data { get; set; }
 
-		#region IPoolable implementation
+        #region IPoolable implementation
 
-		public void Restore ()
-		{
-			this.type = null;
-			this.target = null;
-			this.data = null;
-		}
+        public void Restore()
+        {
+            type = null;
+            target = null;
+            data = null;
+        }
 
-		public void Retain()
-		{
-			retainCount++;
-		}
+        public void Retain()
+        {
+            retainCount++;
+        }
 
-		public void Release()
-		{
-			retainCount--;
-			if (retainCount == 0)
-			{
-				target.ReleaseEvent (this);
-			}
-		}
+        public void Release()
+        {
+            retainCount--;
+            if (retainCount == 0)
+            {
+                target.ReleaseEvent(this);
+            }
+        }
 
-		public bool retain{ 
-			get
-			{
-				return retainCount > 0;
-			}
-		}
+        public bool retain => retainCount > 0;
 
-		#endregion
-	}
+        #endregion
+    }
 }

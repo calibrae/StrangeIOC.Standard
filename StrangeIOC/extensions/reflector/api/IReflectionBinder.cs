@@ -27,7 +27,6 @@
  */
 
 using System;
-using strange.framework.api;
 
 namespace strange.extensions.reflector.api
 {
@@ -40,4 +39,3 @@ namespace strange.extensions.reflector.api
         IReflectedClass Get<T>();
     }
 }
-

@@ -22,14 +22,11 @@
  * @see strange.extensions.injector.api.IInjectionBinder
  */
 
-using strange.extensions.injector.api;
-using strange.framework.api;
-
 namespace strange.extensions.injector.api
 {
-	public interface ICrossContextInjectionBinder : IInjectionBinder
-	{
-		//Cross-context Injection Binder is shared across all child contexts
-		IInjectionBinder CrossContextBinder { get; set; }
-	}
+    public interface ICrossContextInjectionBinder : IInjectionBinder
+    {
+        //Cross-context Injection Binder is shared across all child contexts
+        IInjectionBinder CrossContextBinder { get; set; }
+    }
 }

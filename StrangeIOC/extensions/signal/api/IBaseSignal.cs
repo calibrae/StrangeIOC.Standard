@@ -46,8 +46,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace strange.extensions.signal.api
 {
@@ -72,7 +70,8 @@ namespace strange.extensions.signal.api
 
         void RemoveAllListeners();
 
-        /// Returns a List<System.Type> representing the Types bindable to this Signal
+        /// Returns a List
+        /// <System.Type> representing the Types bindable to this Signal
         List<Type> GetTypes();
     }
 }

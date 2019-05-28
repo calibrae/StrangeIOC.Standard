@@ -112,222 +112,213 @@
  * ]
  */
 
+using System;
 using System.Collections.Generic;
-using System.Reflection;
-using strange.framework.api;
 using MiniJSON;
+using strange.framework.api;
 
 namespace strange.framework.impl
 {
-	public class Binder : IBinder
-	{
-		/// Dictionary of all bindings
-		/// Two-layer keys. First key to individual Binding keys,
-		/// then to Binding names. (This wouldn't be required if
-		/// Unity supported Tuple or HashSet.)
-		protected Dictionary <object, Dictionary<object, IBinding>> bindings;
+    public class Binder : IBinder
+    {
+        /// A handler for resolving the nature of a binding during chained commands
+        public delegate void BindingResolver(IBinding binding);
 
-		protected Dictionary <object, Dictionary<IBinding, object>> conflicts;
+        /// Dictionary of all bindings
+        /// Two-layer keys. First key to individual Binding keys,
+        /// then to Binding names. (This wouldn't be required if
+        /// Unity supported Tuple or HashSet.)
+        protected Dictionary<object, Dictionary<object, IBinding>> bindings;
 
-		protected List<object> bindingWhitelist;
+        protected List<object> bindingWhitelist;
 
-		/// A handler for resolving the nature of a binding during chained commands
-		public delegate void BindingResolver(IBinding binding);
+        protected Dictionary<object, Dictionary<IBinding, object>> conflicts;
 
-		public Binder ()
-		{
-			bindings = new Dictionary <object, Dictionary<object, IBinding>> ();
-			conflicts = new Dictionary <object, Dictionary<IBinding, object>> ();
-		}
+        public Binder()
+        {
+            bindings = new Dictionary<object, Dictionary<object, IBinding>>();
+            conflicts = new Dictionary<object, Dictionary<IBinding, object>>();
+        }
 
-		virtual public IBinding Bind<T>()
-		{
-			return Bind (typeof(T));
-		}
+        public virtual IBinding Bind<T>()
+        {
+            return Bind(typeof(T));
+        }
 
-		virtual public IBinding Bind(object key)
-		{
-			IBinding binding;
-			binding = GetRawBinding ();
-			binding.Bind(key);
-			return binding;
-		}
+        public virtual IBinding Bind(object key)
+        {
+            IBinding binding;
+            binding = GetRawBinding();
+            binding.Bind(key);
+            return binding;
+        }
 
-		virtual public IBinding GetBinding<T>()
-		{
-			return GetBinding (typeof(T), null);
-		}
+        public virtual IBinding GetBinding<T>()
+        {
+            return GetBinding(typeof(T), null);
+        }
 
-		virtual public IBinding GetBinding(object key)
-		{
-			return GetBinding (key, null);
-		}
+        public virtual IBinding GetBinding(object key)
+        {
+            return GetBinding(key, null);
+        }
 
-		virtual public IBinding GetBinding<T>(object name)
-		{
-			return GetBinding (typeof(T), name);
-		}
+        public virtual IBinding GetBinding<T>(object name)
+        {
+            return GetBinding(typeof(T), name);
+        }
 
-		virtual public IBinding GetBinding(object key, object name)
-		{
-			if (conflicts.Count > 0)
-			{
-				string conflictSummary = "";
-				Dictionary<object, Dictionary<IBinding, object>>.KeyCollection keys = conflicts.Keys;
-				foreach (object k in keys)
-				{
-					if (conflictSummary.Length > 0)
-					{
-						conflictSummary+= ", ";
-					}
-					conflictSummary += k.ToString ();
-				}
-				throw new BinderException ("Binder cannot fetch Bindings when the binder is in a conflicted state.\nConflicts: " + conflictSummary, BinderExceptionType.CONFLICT_IN_BINDER);
-			}
+        public virtual IBinding GetBinding(object key, object name)
+        {
+            if (conflicts.Count > 0)
+            {
+                var conflictSummary = "";
+                var keys = conflicts.Keys;
+                foreach (var k in keys)
+                {
+                    if (conflictSummary.Length > 0)
+                    {
+                        conflictSummary += ", ";
+                    }
 
-			if(bindings.ContainsKey (key))
-			{
-				Dictionary<object, IBinding> dict = bindings [key];
-				name = (name == null) ? BindingConst.NULLOID : name;
-				if (dict.ContainsKey(name))
-				{
-					return dict [name];
-				}
-			}
-			return null;
-		}
+                    conflictSummary += k.ToString();
+                }
 
-		virtual public void Unbind<T>()
-		{
-			Unbind (typeof(T), null);
-		}
+                throw new BinderException(
+                    "Binder cannot fetch Bindings when the binder is in a conflicted state.\nConflicts: " +
+                    conflictSummary, BinderExceptionType.CONFLICT_IN_BINDER);
+            }
 
-		virtual public void Unbind(object key)
-		{
-			Unbind (key, null);
-		}
+            if (bindings.ContainsKey(key))
+            {
+                var dict = bindings[key];
+                name = name == null ? BindingConst.NULLOID : name;
+                if (dict.ContainsKey(name))
+                {
+                    return dict[name];
+                }
+            }
 
-		virtual public void Unbind<T>(object name)
-		{
-			Unbind (typeof(T), name);
-		}
+            return null;
+        }
 
-		virtual public void Unbind(object key, object name)
-		{
-			if (bindings.ContainsKey(key))
-			{
-				Dictionary<object, IBinding> dict = bindings[key];
-				object bindingName = (name == null) ? BindingConst.NULLOID : name;
-				if (dict.ContainsKey(bindingName))
-				{
-					dict.Remove(bindingName);
-				}
-			}
-		}
+        public virtual void Unbind<T>()
+        {
+            Unbind(typeof(T), null);
+        }
 
-		virtual public void Unbind(IBinding binding)
-		{
-			if (binding == null)
-			{
-				return;
-			}
-			Unbind (binding.key, binding.name);
-		}
+        public virtual void Unbind(object key)
+        {
+            Unbind(key, null);
+        }
 
-		virtual public void RemoveValue (IBinding binding, object value)
-		{
-			if (binding == null || value == null)
-			{
-				return;
-			}
-			object key = binding.key;
-			Dictionary<object, IBinding> dict;
-			if ((bindings.ContainsKey(key)))
-			{
-				dict = bindings [key];
-				if (dict.ContainsKey(binding.name))
-				{
-					IBinding useBinding = dict [binding.name];
-					useBinding.RemoveValue (value);
+        public virtual void Unbind<T>(object name)
+        {
+            Unbind(typeof(T), name);
+        }
 
-					//If result is empty, clean it out
-					object[] values = useBinding.value as object[];
-					if (values == null || values.Length == 0)
-					{
-						dict.Remove(useBinding.name);
-					}
-				}
-			}
-		}
+        public virtual void Unbind(object key, object name)
+        {
+            if (bindings.ContainsKey(key))
+            {
+                var dict = bindings[key];
+                var bindingName = name == null ? BindingConst.NULLOID : name;
+                if (dict.ContainsKey(bindingName))
+                {
+                    dict.Remove(bindingName);
+                }
+            }
+        }
 
-		virtual public void RemoveKey (IBinding binding, object key)
-		{
-			if (binding == null || key == null || bindings.ContainsKey(key) == false) 
-			{
-				return;
-			}
-			Dictionary<object, IBinding> dict = bindings[key];
-			if (dict.ContainsKey (binding.name)) 
-			{
-				IBinding useBinding = dict [binding.name];
-				useBinding.RemoveKey (key);
-				object[] keys = useBinding.key as object[];
-				if (keys != null && keys.Length == 0)
-				{
-					dict.Remove(binding.name);
-				}
-			}
-		}
+        public virtual void Unbind(IBinding binding)
+        {
+            if (binding == null)
+            {
+                return;
+            }
 
-		virtual public void RemoveName (IBinding binding, object name)
-		{
-			if (binding == null || name == null) 
-			{
-				return;
-			}
-			object key;
-			if (binding.keyConstraint.Equals(BindingConstraintType.ONE))
-			{
-				key = binding.key;
-			}
-			else
-			{
-				object[] keys = binding.key as object[];
-				key = keys [0];
-			}
+            Unbind(binding.key, binding.name);
+        }
 
-			Dictionary<object, IBinding> dict = bindings[key];
-			if (dict.ContainsKey (name)) 
-			{
-				IBinding useBinding = dict [name];
-				useBinding.RemoveName (name);
-			}
-		}
+        public virtual void RemoveValue(IBinding binding, object value)
+        {
+            if (binding == null || value == null)
+            {
+                return;
+            }
 
-		virtual public IBinding GetRawBinding()
-		{
-			return new Binding (resolver);
-		}
+            var key = binding.key;
+            Dictionary<object, IBinding> dict;
+            if (bindings.ContainsKey(key))
+            {
+                dict = bindings[key];
+                if (dict.ContainsKey(binding.name))
+                {
+                    var useBinding = dict[binding.name];
+                    useBinding.RemoveValue(value);
 
-		/// The default handler for resolving bindings during chained commands
-		virtual protected void resolver(IBinding binding)
-		{
-			object key = binding.key;
-			if (binding.keyConstraint.Equals(BindingConstraintType.ONE)) {
-				ResolveBinding (binding, key);
-			} 
-			else
-			{
-				object[] keys = key as object[];
-				int aa = keys.Length;
-				for(int a = 0; a < aa; a++)
-				{
-					ResolveBinding (binding, keys[a]);
-				}
-			}
-		}
+                    //If result is empty, clean it out
+                    var values = useBinding.value as object[];
+                    if (values == null || values.Length == 0)
+                    {
+                        dict.Remove(useBinding.name);
+                    }
+                }
+            }
+        }
 
-		/**
+        public virtual void RemoveKey(IBinding binding, object key)
+        {
+            if (binding == null || key == null || bindings.ContainsKey(key) == false)
+            {
+                return;
+            }
+
+            var dict = bindings[key];
+            if (dict.ContainsKey(binding.name))
+            {
+                var useBinding = dict[binding.name];
+                useBinding.RemoveKey(key);
+                var keys = useBinding.key as object[];
+                if (keys != null && keys.Length == 0)
+                {
+                    dict.Remove(binding.name);
+                }
+            }
+        }
+
+        public virtual void RemoveName(IBinding binding, object name)
+        {
+            if (binding == null || name == null)
+            {
+                return;
+            }
+
+            object key;
+            if (binding.keyConstraint.Equals(BindingConstraintType.ONE))
+            {
+                key = binding.key;
+            }
+            else
+            {
+                var keys = binding.key as object[];
+                key = keys[0];
+            }
+
+            var dict = bindings[key];
+            if (dict.ContainsKey(name))
+            {
+                var useBinding = dict[name];
+                useBinding.RemoveName(name);
+            }
+        }
+
+        public virtual IBinding GetRawBinding()
+        {
+            return new Binding(resolver);
+        }
+
+        /**
 		 * This method places individual Bindings into the bindings Dictionary
 		 * as part of the resolving process. Note that while some Bindings
 		 * may store multiple keys, each key takes a unique position in the
@@ -336,103 +327,124 @@ namespace strange.framework.impl
 		 * Conflicts in the course of fluent binding are expected, but GetBinding
 		 * will throw an error if there are any unresolved conflicts.
 		 */
-		virtual public void ResolveBinding(IBinding binding, object key)
-		{
+        public virtual void ResolveBinding(IBinding binding, object key)
+        {
+            //Check for existing conflicts
+            if (conflicts.ContainsKey(key)) //does the current key have any conflicts?
+            {
+                var inConflict = conflicts[key];
+                if (inConflict.ContainsKey(binding)) //Am I on the conflict list?
+                {
+                    var conflictName = inConflict[binding];
+                    if (isConflictCleared(inConflict, binding)) //Am I now out of conflict?
+                    {
+                        clearConflict(key, conflictName, inConflict); //remove all from conflict list.
+                    }
+                    else
+                    {
+                        return; //still in conflict
+                    }
+                }
+            }
 
-			//Check for existing conflicts
-			if (conflicts.ContainsKey(key))	//does the current key have any conflicts?
-			{
-				Dictionary<IBinding, object> inConflict = conflicts [key];
-				if (inConflict.ContainsKey(binding)) //Am I on the conflict list?
-				{
-					object conflictName = inConflict[binding];
-					if (isConflictCleared(inConflict, binding)) //Am I now out of conflict?
-					{
-						clearConflict (key, conflictName, inConflict); //remove all from conflict list.
-					}
-					else
-					{
-						return;	//still in conflict
-					}
-				}		
-			}
+            //Check for and assign new conflicts
+            var bindingName = binding.name == null ? BindingConst.NULLOID : binding.name;
+            Dictionary<object, IBinding> dict;
+            if (bindings.ContainsKey(key))
+            {
+                dict = bindings[key];
+                //Will my registration create a new conflict?
+                if (dict.ContainsKey(bindingName))
+                {
+                    //If the existing binding is not this binding, and the existing binding is not weak
+                    //If it IS weak, we will proceed normally and overwrite the binding in the dictionary
+                    var existingBinding = dict[bindingName];
+                    //if (existingBinding != binding && !existingBinding.isWeak)
+                    //SDM2014-01-20: as part of cross-context implicit bindings fix, attempts by a weak binding to replace a non-weak binding are ignored instead of being 
+                    if (existingBinding != binding)
+                    {
+                        if (!existingBinding.isWeak && !binding.isWeak)
+                        {
+                            //register both conflictees
+                            registerNameConflict(key, binding, dict[bindingName]);
+                            return;
+                        }
 
-			//Check for and assign new conflicts
-			object bindingName = (binding.name == null) ? BindingConst.NULLOID : binding.name;
-			Dictionary<object, IBinding> dict;
-			if ((bindings.ContainsKey(key)))
-			{
-				dict = bindings [key];
-				//Will my registration create a new conflict?
-				if (dict.ContainsKey(bindingName))
-				{
+                        if (existingBinding.isWeak &&
+                            (!binding.isWeak || existingBinding.value == null || existingBinding.value is Type))
+                        {
+                            //SDM2014-01-20: (in relation to the cross-context implicit bindings fix)
+                            // 1) if the previous binding is weak and the new binding is not weak, then the new binding replaces the previous;
+                            // 2) but if the new binding is also weak, then it only replaces the previous weak binding if the previous binding
+                            // has not already been instantiated:
 
-					//If the existing binding is not this binding, and the existing binding is not weak
-					//If it IS weak, we will proceed normally and overwrite the binding in the dictionary
-					IBinding existingBinding = dict[bindingName];
-					//if (existingBinding != binding && !existingBinding.isWeak)
-					//SDM2014-01-20: as part of cross-context implicit bindings fix, attempts by a weak binding to replace a non-weak binding are ignored instead of being 
-					if (existingBinding != binding)
-					{
-						if (!existingBinding.isWeak && !binding.isWeak)
-						{
-							//register both conflictees
-							registerNameConflict(key, binding, dict[bindingName]);
-						    return;
-						}
+                            //Remove the previous binding.
+                            dict.Remove(bindingName);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                dict = new Dictionary<object, IBinding>();
+                bindings[key] = dict;
+            }
 
-						if (existingBinding.isWeak && (!binding.isWeak || existingBinding.value == null || existingBinding.value is System.Type))
-						{
-							//SDM2014-01-20: (in relation to the cross-context implicit bindings fix)
-							// 1) if the previous binding is weak and the new binding is not weak, then the new binding replaces the previous;
-							// 2) but if the new binding is also weak, then it only replaces the previous weak binding if the previous binding
-							// has not already been instantiated:
+            //Remove nulloid bindings
+            if (dict.ContainsKey(BindingConst.NULLOID) && dict[BindingConst.NULLOID].Equals(binding))
+            {
+                dict.Remove(BindingConst.NULLOID);
+            }
 
-							//Remove the previous binding.
-							dict.Remove(bindingName);
-						}
-					}
-					
-				}
-			}
-			else
-			{
-				dict = new Dictionary<object, IBinding>();
-				bindings [key] = dict;
-			}
+            //Add (or override) our new binding!
+            if (!dict.ContainsKey(bindingName))
+            {
+                dict.Add(bindingName, binding);
+            }
+        }
 
-			//Remove nulloid bindings
-			if (dict.ContainsKey(BindingConst.NULLOID) && dict[BindingConst.NULLOID].Equals(binding) )
-			{
-				dict.Remove (BindingConst.NULLOID);
-			}
+        /// <summary>
+        ///     For consumed bindings, provide a secure whitelist of legal bindings.
+        /// </summary>
+        /// <param name="list"> A List of fully-qualified classnames eligible to be consumed during dynamic runtime binding.</param>
+        public virtual void WhitelistBindings(List<object> list)
+        {
+            bindingWhitelist = list;
+        }
 
-			//Add (or override) our new binding!
-			if (!dict.ContainsKey(bindingName))
-			{
-				dict.Add (bindingName, binding);
-			}
-		}
+        /// <summary>
+        ///     Provide the Binder with JSON data to perform runtime binding
+        /// </summary>
+        /// <param name="jsonString">A json-parsable string containing the bindings.</param>
+        public virtual void ConsumeBindings(string jsonString)
+        {
+            var list = Json.Deserialize(jsonString) as List<object>;
+            ConsumeBindings(list);
+        }
 
-		/// <summary>
-		/// For consumed bindings, provide a secure whitelist of legal bindings.
-		/// </summary>
-		/// <param name="list"> A List of fully-qualified classnames eligible to be consumed during dynamic runtime binding.</param>
-		virtual public void WhitelistBindings(List<object> list)
-		{
-			bindingWhitelist = list;
-		}
+        public virtual void OnRemove()
+        {
+        }
 
-		/// <summary>
-		/// Provide the Binder with JSON data to perform runtime binding
-		/// </summary>
-		/// <param name="jsonString">A json-parsable string containing the bindings.</param>
-		virtual public void ConsumeBindings(string jsonString)
-		{
+        /// The default handler for resolving bindings during chained commands
+        protected virtual void resolver(IBinding binding)
+        {
+            var key = binding.key;
+            if (binding.keyConstraint.Equals(BindingConstraintType.ONE))
+            {
+                ResolveBinding(binding, key);
+            }
+            else
+            {
+                var keys = key as object[];
+                var aa = keys.Length;
+                for (var a = 0; a < aa; a++)
+                {
+                    ResolveBinding(binding, keys[a]);
+                }
+            }
+        }
 
-            List<object> list = Json.Deserialize(jsonString) as List<object>;
-			ConsumeBindings(list);
-		}
 /*
 	    virtual public void ConsumeBindings(string jsonString, Assembly assembly)
 	    {
@@ -448,263 +460,284 @@ namespace strange.framework.impl
 	        }
         }
         */
-	    virtual public void ConsumeBindings(List<object> list)
-	    {
-	        IBinding testBinding = GetRawBinding();
+        public virtual void ConsumeBindings(List<object> list)
+        {
+            var testBinding = GetRawBinding();
 
-	        for (int a = 0, aa = list.Count; a < aa; a++)
-	        {
-	            ConsumeItem(list[a] as Dictionary<string, object>, testBinding);
-	        }
+            for (int a = 0, aa = list.Count; a < aa; a++)
+            {
+                ConsumeItem(list[a] as Dictionary<string, object>, testBinding);
+            }
         }
 
-		/// <summary>
-		/// Consumes an individual JSON element and returns the Binding that element represents 
-		/// </summary>
-		/// <returns>The Binding represented the provided JSON</returns>
-		/// <param name="item">A Dictionary of definitions for the individual binding parameters</param>
-		/// <param name="testBinding">An example binding for the current Binder. This method uses the 
-		/// binding constraints of the example to raise errors if asked to parse illegally</param>
-		virtual protected IBinding ConsumeItem(Dictionary<string, object> item, IBinding testBinding)
-		{
-			int bindConstraints = (testBinding.keyConstraint == BindingConstraintType.ONE) ? 0 : 1;
-			bindConstraints |= (testBinding.valueConstraint == BindingConstraintType.ONE) ? 0 : 2;
-			IBinding binding = null;
-			List<object> keyList;
-			List<object> valueList;
+        /// <summary>
+        ///     Consumes an individual JSON element and returns the Binding that element represents
+        /// </summary>
+        /// <returns>The Binding represented the provided JSON</returns>
+        /// <param name="item">A Dictionary of definitions for the individual binding parameters</param>
+        /// <param name="testBinding">
+        ///     An example binding for the current Binder. This method uses the
+        ///     binding constraints of the example to raise errors if asked to parse illegally
+        /// </param>
+        protected virtual IBinding ConsumeItem(Dictionary<string, object> item, IBinding testBinding)
+        {
+            var bindConstraints = testBinding.keyConstraint == BindingConstraintType.ONE ? 0 : 1;
+            bindConstraints |= testBinding.valueConstraint == BindingConstraintType.ONE ? 0 : 2;
+            IBinding binding = null;
+            List<object> keyList;
+            List<object> valueList;
 
-			if (item != null)
-			{
-				item = ConformRuntimeItem (item);
-				// Check that Bind exists
-				if (!item.ContainsKey ("Bind"))
-				{
-					throw new BinderException ("Attempted to consume a binding without a bind key.", BinderExceptionType.RUNTIME_NO_BIND);
-				}
-				else
-				{
-					keyList = conformRuntimeToList (item ["Bind"]);
-				}
-				// Check that key counts match the binding constraint
-				if (keyList.Count > 1 && (bindConstraints & 1) == 0)
-				{
-					throw new BinderException ("Binder " + this.ToString () + " supports only a single binding key. A runtime binding key including " + keyList [0].ToString () + " is trying to add more.", BinderExceptionType.RUNTIME_TOO_MANY_KEYS);
-				}
+            if (item != null)
+            {
+                item = ConformRuntimeItem(item);
+                // Check that Bind exists
+                if (!item.ContainsKey("Bind"))
+                {
+                    throw new BinderException("Attempted to consume a binding without a bind key.",
+                        BinderExceptionType.RUNTIME_NO_BIND);
+                }
 
-				if (!item.ContainsKey ("To"))
-				{
-					valueList = keyList;
-				}
-				else
-				{
-					valueList = conformRuntimeToList (item ["To"]);
-				}
-				// Check that value counts match the binding constraint
-				if (valueList.Count > 1 && (bindConstraints & 2) == 0)
-				{
-					throw new BinderException ("Binder " + this.ToString () + " supports only a single binding value. A runtime binding value including " + valueList [0].ToString () + " is trying to add more.", BinderExceptionType.RUNTIME_TOO_MANY_VALUES);
-				}
+                keyList = conformRuntimeToList(item["Bind"]);
+                // Check that key counts match the binding constraint
+                if (keyList.Count > 1 && (bindConstraints & 1) == 0)
+                {
+                    throw new BinderException(
+                        "Binder " + ToString() +
+                        " supports only a single binding key. A runtime binding key including " + keyList[0] +
+                        " is trying to add more.", BinderExceptionType.RUNTIME_TOO_MANY_KEYS);
+                }
 
-				// Check Whitelist if it exists
-				if (bindingWhitelist != null)
-				{
-					foreach (object value in valueList)
-					{
-						if (bindingWhitelist.IndexOf (value) == -1)
-						{
-							throw new BinderException ("Value " + value.ToString () + " not found on whitelist for " + this.ToString () + ".", BinderExceptionType.RUNTIME_FAILED_WHITELIST_CHECK);
-						}
-					}
-				}
+                if (!item.ContainsKey("To"))
+                {
+                    valueList = keyList;
+                }
+                else
+                {
+                    valueList = conformRuntimeToList(item["To"]);
+                }
 
-				binding = performKeyValueBindings (keyList, valueList);
+                // Check that value counts match the binding constraint
+                if (valueList.Count > 1 && (bindConstraints & 2) == 0)
+                {
+                    throw new BinderException(
+                        "Binder " + ToString() +
+                        " supports only a single binding value. A runtime binding value including " + valueList[0] +
+                        " is trying to add more.", BinderExceptionType.RUNTIME_TOO_MANY_VALUES);
+                }
 
-				// Optionally look for ToName
-				if (item.ContainsKey ("ToName"))
-				{
-					binding = binding.ToName (item ["ToName"]);
-				}
+                // Check Whitelist if it exists
+                if (bindingWhitelist != null)
+                {
+                    foreach (var value in valueList)
+                    {
+                        if (bindingWhitelist.IndexOf(value) == -1)
+                        {
+                            throw new BinderException(
+                                "Value " + value + " not found on whitelist for " + ToString() + ".",
+                                BinderExceptionType.RUNTIME_FAILED_WHITELIST_CHECK);
+                        }
+                    }
+                }
 
-				// Add runtime options
-				if (item.ContainsKey ("Options"))
-				{
-					List<object> optionsList = conformRuntimeToList (item ["Options"]);
-					addRuntimeOptions (binding, optionsList);
-				}
-			}
-			return binding;
-		}
+                binding = performKeyValueBindings(keyList, valueList);
 
-		/// <summary>
-		/// Override this method in subclasses to add special-case SYNTACTICAL SUGAR for Runtime JSON bindings.
-		/// For example, if your Binder needs a special JSON tag BindView, such that BindView is simply
-		/// another way of expressing 'Bind', override this method conform the sugar to
-		/// match the base definition (BindView becomes Bind).
-		/// </summary>
-		/// <returns>The conformed Dictionary.</returns>
-		/// <param name="dictionary">A Dictionary representing the options for a Binding.</param>
-		virtual protected Dictionary<string, object> ConformRuntimeItem(Dictionary<string, object> dictionary)
-		{
-			return dictionary;
-		}
+                // Optionally look for ToName
+                if (item.ContainsKey("ToName"))
+                {
+                    binding = binding.ToName(item["ToName"]);
+                }
 
-		/// <summary>
-		/// Performs the key value bindings for a JSON runtime binding.
-		/// </summary>
-		/// <returns>A Binding.</returns>
-		/// <param name="keyList">A list of things to Bind.</param>
-		/// <param name="valueList">A list of the things to which we're binding.</param>
-		virtual protected IBinding performKeyValueBindings(List<object> keyList, List<object> valueList)
-		{
-			IBinding binding = null;
+                // Add runtime options
+                if (item.ContainsKey("Options"))
+                {
+                    var optionsList = conformRuntimeToList(item["Options"]);
+                    addRuntimeOptions(binding, optionsList);
+                }
+            }
 
-			// Bind in order
-			foreach (object key in keyList)
-			{
-				binding = Bind (key);
-			}
-			foreach (object value in valueList)
-			{
-				binding = binding.To (value);
-			}
+            return binding;
+        }
 
-			return binding;
-		}
+        /// <summary>
+        ///     Override this method in subclasses to add special-case SYNTACTICAL SUGAR for Runtime JSON bindings.
+        ///     For example, if your Binder needs a special JSON tag BindView, such that BindView is simply
+        ///     another way of expressing 'Bind', override this method conform the sugar to
+        ///     match the base definition (BindView becomes Bind).
+        /// </summary>
+        /// <returns>The conformed Dictionary.</returns>
+        /// <param name="dictionary">A Dictionary representing the options for a Binding.</param>
+        protected virtual Dictionary<string, object> ConformRuntimeItem(Dictionary<string, object> dictionary)
+        {
+            return dictionary;
+        }
 
-		/// <summary>
-		/// Override this method to decorate subclasses with further runtime capabilities.
-		/// For example, InjectionBinder adds ToSingleton and CrossContext capabilities so that
-		/// these can be specified in JSON.
-		/// 
-		/// By default, the Binder supports 'Weak' as a runtime option.
-		/// </summary>
-		/// <returns>The provided Binding.</returns>
-		/// <param name="binding">A Binding to have capabilities added.</param>
-		/// <param name="options">The list of runtime options for this Binding.</param>
-		virtual protected IBinding addRuntimeOptions(IBinding binding, List<object> options)
-		{
-			if (options.IndexOf ("Weak") > -1)
-			{
-				binding.Weak();
-			}
-			return binding;
-		}
+        /// <summary>
+        ///     Performs the key value bindings for a JSON runtime binding.
+        /// </summary>
+        /// <returns>A Binding.</returns>
+        /// <param name="keyList">A list of things to Bind.</param>
+        /// <param name="valueList">A list of the things to which we're binding.</param>
+        protected virtual IBinding performKeyValueBindings(List<object> keyList, List<object> valueList)
+        {
+            IBinding binding = null;
 
-		/// <summary>
-		/// Convert the object to List<object>
-		/// </summary>
-		/// <returns>If a List, returns the original object, typed to List<object>. If a value, creates a List and adds the value to it.</returns>
-		/// <param name="bindObject">The object on which we're operating.</param>
-		protected List<object> conformRuntimeToList(object bindObject)
-		{
-			List<object> conformed = new List<object> ();
+            // Bind in order
+            foreach (var key in keyList)
+            {
+                binding = Bind(key);
+            }
 
-			string t = bindObject.GetType().ToString ();
-			if (t.IndexOf ("System.Collections.Generic.List") > -1)
-			{
-				return bindObject as List<object>;
-			}
+            foreach (var value in valueList)
+            {
+                binding = binding.To(value);
+            }
 
-			// Conform strings to Lists
-			switch (t)
-			{
-				case "System.String":
-					string stringValue = bindObject as string;
-					conformed.Add(stringValue);
-					break;
-				case "System.Int64":
-					int intValue = (int)bindObject;
-					conformed.Add(intValue);
-					break;
-				case "System.Double":
-					float floatValue = (float)bindObject;
-					conformed.Add(floatValue);
-					break;
-				default:
-					throw new BinderException ("Runtime binding keys (Bind) must be strings or numbers.\nBinding detected of type " + t, BinderExceptionType.RUNTIME_TYPE_UNKNOWN);
-			}
-			return conformed;
-		}
+            return binding;
+        }
 
-		/// Take note of bindings that are in conflict.
-		/// This occurs routinely during fluent binding, but will spark an error if
-		/// GetBinding is called while this Binder still has conflicts.
-		protected void registerNameConflict(object key, IBinding newBinding, IBinding existingBinding)
-		{
-			Dictionary<IBinding, object> dict;
-			if (conflicts.ContainsKey(key) == false)
-			{
-				dict = new Dictionary<IBinding, object> ();
-				conflicts [key] = dict;
-			}
-			else
-			{
-				dict = conflicts [key];
-			}
-			dict [newBinding] = newBinding.name;
-			dict [existingBinding] = newBinding.name;
-		}
+        /// <summary>
+        ///     Override this method to decorate subclasses with further runtime capabilities.
+        ///     For example, InjectionBinder adds ToSingleton and CrossContext capabilities so that
+        ///     these can be specified in JSON.
+        ///     By default, the Binder supports 'Weak' as a runtime option.
+        /// </summary>
+        /// <returns>The provided Binding.</returns>
+        /// <param name="binding">A Binding to have capabilities added.</param>
+        /// <param name="options">The list of runtime options for this Binding.</param>
+        protected virtual IBinding addRuntimeOptions(IBinding binding, List<object> options)
+        {
+            if (options.IndexOf("Weak") > -1)
+            {
+                binding.Weak();
+            }
 
-		/// Returns true if the provided binding and the binding in the dict are no longer conflicting
-		protected bool isConflictCleared(Dictionary<IBinding, object> dict, IBinding binding)
-		{
-			foreach (KeyValuePair<IBinding, object> kv in dict)
-			{
-				if (kv.Key != binding && kv.Key.name == binding.name)
-				{
-					return false;
-				}
-			}
-			return true;
-		}
+            return binding;
+        }
 
-		protected void clearConflict(object key, object name, Dictionary<IBinding, object> dict)
-		{
-			List<IBinding> removalList = new List<IBinding>();
+        /// <summary>
+        ///     Convert the object to List<object>
+        /// </summary>
+        /// <returns>
+        ///     If a List, returns the original object, typed to List
+        ///     <object>. If a value, creates a List and adds the value to it.
+        /// </returns>
+        /// <param name="bindObject">The object on which we're operating.</param>
+        protected List<object> conformRuntimeToList(object bindObject)
+        {
+            var conformed = new List<object>();
 
-			foreach(KeyValuePair<IBinding, object> kv in dict)
-			{
-				object v = kv.Value;
-				if (v.Equals(name))
-				{
-					removalList.Add (kv.Key);
-				}
-			}
-			int aa = removalList.Count;
-			for (int a = 0; a < aa; a++)
-			{
-				dict.Remove(removalList[a]);
-			}
-			if (dict.Count == 0)
-			{
-				conflicts.Remove (key);
-			}
-		}
+            var t = bindObject.GetType().ToString();
+            if (t.IndexOf("System.Collections.Generic.List") > -1)
+            {
+                return bindObject as List<object>;
+            }
 
-		protected T[] spliceValueAt<T>(int splicePos, object[] objectValue)
-		{
-			T[] newList = new T[objectValue.Length - 1];
-			int mod = 0;
-			int aa = objectValue.Length;
-			for(int a = 0; a < aa; a++)
-			{
-				if (a == splicePos)
-				{
-					mod = -1;
-					continue;
-				}
-				newList [a + mod] = (T)objectValue [a];
-			}
-			return newList;
-		}
+            // Conform strings to Lists
+            switch (t)
+            {
+                case "System.String":
+                    var stringValue = bindObject as string;
+                    conformed.Add(stringValue);
+                    break;
+                case "System.Int64":
+                    var intValue = (int) bindObject;
+                    conformed.Add(intValue);
+                    break;
+                case "System.Double":
+                    var floatValue = (float) bindObject;
+                    conformed.Add(floatValue);
+                    break;
+                default:
+                    throw new BinderException(
+                        "Runtime binding keys (Bind) must be strings or numbers.\nBinding detected of type " + t,
+                        BinderExceptionType.RUNTIME_TYPE_UNKNOWN);
+            }
 
-		/// Remove the item at splicePos from the list objectValue 
-		protected object[] spliceValueAt(int splicePos, object[] objectValue)
-		{
-			return spliceValueAt<object>(splicePos, objectValue);
-		}
+            return conformed;
+        }
 
-		virtual public void OnRemove() { }
-	}
+        /// Take note of bindings that are in conflict.
+        /// This occurs routinely during fluent binding, but will spark an error if
+        /// GetBinding is called while this Binder still has conflicts.
+        protected void registerNameConflict(object key, IBinding newBinding, IBinding existingBinding)
+        {
+            Dictionary<IBinding, object> dict;
+            if (conflicts.ContainsKey(key) == false)
+            {
+                dict = new Dictionary<IBinding, object>();
+                conflicts[key] = dict;
+            }
+            else
+            {
+                dict = conflicts[key];
+            }
+
+            dict[newBinding] = newBinding.name;
+            dict[existingBinding] = newBinding.name;
+        }
+
+        /// Returns true if the provided binding and the binding in the dict are no longer conflicting
+        protected bool isConflictCleared(Dictionary<IBinding, object> dict, IBinding binding)
+        {
+            foreach (var kv in dict)
+            {
+                if (kv.Key != binding && kv.Key.name == binding.name)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        protected void clearConflict(object key, object name, Dictionary<IBinding, object> dict)
+        {
+            var removalList = new List<IBinding>();
+
+            foreach (var kv in dict)
+            {
+                var v = kv.Value;
+                if (v.Equals(name))
+                {
+                    removalList.Add(kv.Key);
+                }
+            }
+
+            var aa = removalList.Count;
+            for (var a = 0; a < aa; a++)
+            {
+                dict.Remove(removalList[a]);
+            }
+
+            if (dict.Count == 0)
+            {
+                conflicts.Remove(key);
+            }
+        }
+
+        protected T[] spliceValueAt<T>(int splicePos, object[] objectValue)
+        {
+            var newList = new T[objectValue.Length - 1];
+            var mod = 0;
+            var aa = objectValue.Length;
+            for (var a = 0; a < aa; a++)
+            {
+                if (a == splicePos)
+                {
+                    mod = -1;
+                    continue;
+                }
+
+                newList[a + mod] = (T) objectValue[a];
+            }
+
+            return newList;
+        }
+
+        /// Remove the item at splicePos from the list objectValue
+        protected object[] spliceValueAt(int splicePos, object[] objectValue)
+        {
+            return spliceValueAt<object>(splicePos, objectValue);
+        }
+    }
 }
-

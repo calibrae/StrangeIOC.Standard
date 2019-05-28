@@ -5,8 +5,6 @@ namespace StrangeForms.extensions.context.api
 {
     public interface IXamContextView : IContextView
     {
-
         Page MainPage { get; set; }
-
     }
 }

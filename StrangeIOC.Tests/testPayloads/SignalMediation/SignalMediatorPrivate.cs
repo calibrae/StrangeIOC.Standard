@@ -1,39 +1,37 @@
 ﻿using strange.extensions.context.api;
-using strange.extensions.context.impl;
 using strange.extensions.mediation.api;
 
 namespace strange.unittests
 {
     public class SignalMediatorPrivate : IMediator
     {
-            public IContextView contextView { get; set; }
+        public static int Value;
+        public IContextView contextView { get; set; }
 
-            public static int Value = 0;
+        public void PreRegister()
+        {
+        }
 
-           // [ListensTo(typeof(OneArgSignal))]
-            private void OneArgMethod(int myArg)
-            {
-                Value += myArg;
-            }
+        public void OnRegister()
+        {
+        }
 
-            public void PreRegister()
-            {
-            }
+        public void OnRemove()
+        {
+        }
 
-            public void OnRegister()
-            {
-            }
+        // [ListensTo(typeof(OneArgSignal))]
+        private void OneArgMethod(int myArg)
+        {
+            Value += myArg;
+        }
 
-            public void OnRemove()
-            {
-            }
+        public void OnEnabled()
+        {
+        }
 
-            public void OnEnabled()
-            {
-            }
-
-            public void OnDisabled()
-            {
-            }
+        public void OnDisabled()
+        {
+        }
     }
 }

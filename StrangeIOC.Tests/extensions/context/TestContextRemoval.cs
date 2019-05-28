@@ -1,49 +1,46 @@
-﻿
+﻿using System;
 using NUnit.Framework;
 using strange.extensions.context.impl;
-using System;
 
 namespace strange.unittests
 {
-	[TestFixture]
-	public class TestContextRemoval
-	{
-        object view;
-        CrossContext Parent;
-		TestCrossContextSubclass Child;
-
+    [TestFixture]
+    public class TestContextRemoval
+    {
         [SetUp]
         public void SetUp()
         {
             Context.firstContext = null;
-            view = new object();
-            Parent = new CrossContext(view, true);
-			Child = new TestCrossContextSubclass(view, true);
+            Parent = new CrossContext( true);
+            Child = new TestCrossContextSubclass( true);
         }
 
-		[Test]
-		public void TestRemoval()
-		{
+        private object view;
+        private CrossContext Parent;
+        private TestCrossContextSubclass Child;
+
+        [Test]
+        public void TestRemoval()
+        {
             Parent.AddContext(Child);
 
-            TestDelegate testDelegate = delegate
-            {
-                Parent.RemoveContext(Child);
-            };
+            TestDelegate testDelegate = delegate { Parent.RemoveContext(Child); };
 
             Assert.Throws<TestPassedException>(testDelegate);
-		}
-	}
+        }
+    }
 
 
-	public class TestCrossContextSubclass : CrossContext
+    public class TestCrossContextSubclass : CrossContext
     {
-		public TestCrossContextSubclass() : base()
-	    {}
+        public TestCrossContextSubclass()
+        {
+        }
 
-		public TestCrossContextSubclass(object view, bool autoStartup) : base(view, autoStartup)
-	    {}
-         
+        public TestCrossContextSubclass( bool autoStartup) : base( autoStartup)
+        {
+        }
+
         public override void OnRemove()
         {
             base.OnRemove();
@@ -52,8 +49,10 @@ namespace strange.unittests
         }
     }
 
-    class TestPassedException : Exception
+    internal class TestPassedException : Exception
     {
-        public TestPassedException(string str) : base(str) { }
+        public TestPassedException(string str) : base(str)
+        {
+        }
     }
 }

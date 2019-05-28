@@ -25,7 +25,6 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -38,6 +37,7 @@ namespace strange.extensions.reflector.api
 
         /// Get/set the preferred constructor's list of parameters
         Type[] ConstructorParameters { get; set; }
+
         object[] ConstructorParameterNames { get; set; }
 
         /// Get/set any PostConstructors. This includes inherited PostConstructors.
@@ -52,8 +52,10 @@ namespace strange.extensions.reflector.api
 
         /// [Obsolete"Strange migration to conform to C# guidelines. Removing camelCased publics"]
         ConstructorInfo constructor { get; set; }
+
         /// [Obsolete"Strange migration to conform to C# guidelines. Removing camelCased publics"]
         Type[] constructorParameters { get; set; }
+
         /// [Obsolete"Strange migration to conform to C# guidelines. Removing camelCased publics"]
         MethodInfo[] postConstructors { get; set; }
 
@@ -82,4 +84,3 @@ namespace strange.extensions.reflector.api
         }
     }
 }
-

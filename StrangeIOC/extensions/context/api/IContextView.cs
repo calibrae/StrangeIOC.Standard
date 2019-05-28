@@ -21,18 +21,14 @@
  * 
  * In a standard MVCSContext setup for Unity3D, it is a MonoBehaviour
  * attached to a GameObject at the very top of of your application.
- * It's most important role is to instantiate and call `Start()` on the Context.
+ * It's most important role is to instantiate and call `Start()` on the ViewedContext.
  */
-
-using System;
 
 namespace strange.extensions.context.api
 {
-	public interface IContextView 
-	{
-		/// Get and set the Context
-		IContext context{get;set;}
-
-	}
+    public interface IContextView
+    {
+        /// Get and set the ViewedContext
+        IContext context { get; set; }
+    }
 }
-

@@ -2,9 +2,6 @@
 {
     public class BaseInheritanceOverride
     {
-        [Inject]
-        public ISimpleInterface MyInterface { get; set; }
-
-
+        [Inject] public ISimpleInterface MyInterface { get; set; }
     }
 }

@@ -22,39 +22,42 @@
  * Adds porcelain method to clarify View/Mediator binding.
  */
 
-using System;
 using strange.framework.api;
 
 namespace strange.extensions.mediation.api
 {
-	public interface IMediationBinding : IBinding
-	{
-		/// Porcelain for To<T> providing a little extra clarity and security.
-		IMediationBinding ToMediator<T>();
+    public interface IMediationBinding : IBinding
+    {
+        /// Retrieve the abstracted value set by ToAbstraction
+        /// <T>
+        object abstraction { get; }
 
-		/// Provide an Interface or base Class adapter for the View.
-		/// When the binding specifies ToAbstraction<T>, the Mediator will be expected to inject <T>
-		/// instead of the concrete View class.
-		IMediationBinding ToAbstraction<T>();
-       
-
-		/// Retrieve the abstracted value set by ToAbstraction<T>
-		object abstraction { get; }
         object viewModel { get; }
-	    bool NoChildrenSwitch { get; }
+        bool NoChildrenSwitch { get; }
         bool ForceBindingContextSwitch { get; }
 
-	    new IMediationBinding Bind<T>();
-		new IMediationBinding Bind(object key);
-		new IMediationBinding To<T>();
-		new IMediationBinding To(object o);
+        /// Porcelain for To
+        /// <T> providing a little extra clarity and security.
+        IMediationBinding ToMediator<T>();
+
+        /// Provide an Interface or base Class adapter for the View.
+        /// When the binding specifies ToAbstraction
+        /// <T>
+        ///     , the Mediator will be expected to inject
+        ///     <T>
+        ///         instead of the concrete View class.
+        IMediationBinding ToAbstraction<T>();
+
+        new IMediationBinding Bind<T>();
+        new IMediationBinding Bind(object key);
+        new IMediationBinding To<T>();
+        new IMediationBinding To(object o);
 
         // If you want to map an Interface or base lass adapter for the ViewModel
         // Will raise an exception if the view.BindingContext is not assignable from T
         // the mediato rwill be expected to inject T instead of the concrete viewmodel type.
-	    IMediationBinding ToViewModel<T>();
-	    IMediationBinding NoChildren();
-	    IMediationBinding ForceBindingContext();
-	}
+        IMediationBinding ToViewModel<T>();
+        IMediationBinding NoChildren();
+        IMediationBinding ForceBindingContext();
+    }
 }
-

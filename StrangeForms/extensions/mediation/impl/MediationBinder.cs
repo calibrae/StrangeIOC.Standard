@@ -30,7 +30,6 @@ using System.Reflection;
 using strange.extensions.injector.api;
 using strange.extensions.mediation.api;
 using strange.framework.api;
-using strange.framework.impl;
 using Xamarin.Forms;
 using Binder = strange.framework.impl.Binder;
 
@@ -39,72 +38,15 @@ namespace strange.extensions.mediation.impl
     //TODO remove the view model mapping since the mediator is perfectly able to be the view model 
     public class MediationBinder : Binder, IMediationBinder
     {
-        [Inject]
-        public IInjectionBinder injectionBinder { get; set; }
+        private readonly Dictionary<Element, List<IMediator>> _boundMediators =
+            new Dictionary<Element, List<IMediator>>();
 
-        public MediationBinder()
-        {
-        }
+        [Inject] public IInjectionBinder injectionBinder { get; set; }
 
 
         public override IBinding GetRawBinding()
         {
-            return new MediationBinding(resolver) as IBinding;
-        }
-
-        /// Initialize all IViews within this view
-        protected virtual void injectViewAndChildren(Element view, bool noChildren = false)
-        {
-            injectionBinder.injector.Inject(view, false);
-            if (!noChildren)
-            {
-                TriggerSubChildren(viewChildren(view));
-            }
-        }
-
-        protected virtual IEnumerable<View> viewChildren(Element view)
-        {
-            if (view is ContentPage)
-            {
-                List<View> child = new List<View>();
-                child.Add((view as ContentPage).Content);
-                return child;
-            }
-            else if (view is ScrollView)
-            {
-                List<View> child = new List<View>();
-                child.Add((view as ScrollView).Content);
-                return child;
-            }
-            else if (view is ContentView)
-            {
-                List<View> child = new List<View>();
-                child.Add((view as ContentView).Content);
-                return child;
-            }
-            else if (view is Layout<View>)
-            {
-                return ((view as Layout<View>).Children);
-            }
-            else if (view is ViewCell)
-            {
-                List<View> child = new List<View>();
-                child.Add((view as ViewCell).View);
-                return child;
-            }
-            return new List<View>();
-        }
-
-        protected virtual void TriggerSubChildren(IEnumerable<View> views, MediationEvent evt = MediationEvent.AWAKE)
-        {
-            foreach (var view in views)
-            {
-                if (view == null)
-                {
-                    continue;
-                }
-                Trigger(evt, view);
-            }
+            return new MediationBinding(resolver);
         }
 
         public void Trigger(MediationEvent evt, Element view)
@@ -113,13 +55,15 @@ namespace strange.extensions.mediation.impl
             {
                 return;
             }
+
 //            Debug.WriteLine("Trigger for " + view.GetType());
-            Type viewType = view.GetType();
+            var viewType = view.GetType();
             if (viewType.ToString() == "TimeKeeper.SleepAgendaView")
             {
                 Debug.WriteLine("What the fuck again");
             }
-            IMediationBinding binding = GetBinding(viewType) as IMediationBinding;
+
+            var binding = GetBinding(viewType) as IMediationBinding;
             if (binding != null)
             {
                 switch (evt)
@@ -141,7 +85,7 @@ namespace strange.extensions.mediation.impl
             }
         }
 
-        new public IMediationBinding Bind<T>()
+        public new IMediationBinding Bind<T>()
         {
             return base.Bind<T>() as IMediationBinding;
         }
@@ -151,34 +95,96 @@ namespace strange.extensions.mediation.impl
             return base.Bind<T>() as IMediationBinding;
         }
 
+        /// Initialize all IViews within this view
+        protected virtual void injectViewAndChildren(Element view, bool noChildren = false)
+        {
+            injectionBinder.injector.Inject(view, false);
+            if (!noChildren)
+            {
+                TriggerSubChildren(viewChildren(view));
+            }
+        }
+
+        protected virtual IEnumerable<View> viewChildren(Element view)
+        {
+            if (view is ContentPage)
+            {
+                var child = new List<View>();
+                child.Add((view as ContentPage).Content);
+                return child;
+            }
+
+            if (view is ScrollView)
+            {
+                var child = new List<View>();
+                child.Add((view as ScrollView).Content);
+                return child;
+            }
+
+            if (view is ContentView)
+            {
+                var child = new List<View>();
+                child.Add((view as ContentView).Content);
+                return child;
+            }
+
+            if (view is Layout<View>)
+            {
+                return (view as Layout<View>).Children;
+            }
+
+            if (view is ViewCell)
+            {
+                var child = new List<View>();
+                child.Add((view as ViewCell).View);
+                return child;
+            }
+
+            return new List<View>();
+        }
+
+        protected virtual void TriggerSubChildren(IEnumerable<View> views, MediationEvent evt = MediationEvent.AWAKE)
+        {
+            foreach (var view in views)
+            {
+                if (view == null)
+                {
+                    continue;
+                }
+
+                Trigger(evt, view);
+            }
+        }
+
         /// Creates and registers one or more Mediators for a specific View instance.
         /// Takes a specific View instance and a binding and, if a binding is found for that type, creates and registers a Mediator.
         protected virtual void MapView(Element view, IMediationBinding binding)
         {
-            Type viewType = view.GetType();
+            var viewType = view.GetType();
             _boundMediators.Add(view, new List<IMediator>());
 
             if (bindings.ContainsKey(viewType))
             {
-                object[] values = binding.value as object[];
-                int aa = values.Length;
-                for (int a = 0; a < aa; a++)
+                var values = binding.value as object[];
+                var aa = values.Length;
+                for (var a = 0; a < aa; a++)
                 {
-                    Type mediatorType = values[a] as Type;
+                    var mediatorType = values[a] as Type;
                     if (mediatorType == viewType)
                     {
                         throw new MediationException(
                             viewType + "mapped to itself. The result would be a stack overflow.",
                             MediationExceptionType.MEDIATOR_VIEW_STACK_OVERFLOW);
                     }
+
                     IMediator mediator = null;
                     Type viewModelTypeToInject = null;
 
                     //handling view model
                     if (view.BindingContext != null)
                     {
-                        viewModelTypeToInject = (binding.viewModel == null ||
-                                                 binding.viewModel.Equals(BindingConst.NULLOID))
+                        viewModelTypeToInject = binding.viewModel == null ||
+                                                binding.viewModel.Equals(BindingConst.NULLOID)
                             ? null
                             : binding.viewModel as Type;
                         if (view.BindingContext is IMediator)
@@ -215,16 +221,19 @@ namespace strange.extensions.mediation.impl
                             {
                                 viewModelTypeToInject = bindingContextType;
                             }
+
                             injectionBinder.Bind(viewModelTypeToInject).ToValue(view.BindingContext);
                         }
                     }
+
                     if (mediator == null)
                     {
                         mediator = (IMediator) Activator.CreateInstance(mediatorType);
                     }
+
                     mediator.PreRegister();
 
-                    Type typeToInject = (binding.abstraction == null || binding.abstraction.Equals(BindingConst.NULLOID))
+                    var typeToInject = binding.abstraction == null || binding.abstraction.Equals(BindingConst.NULLOID)
                         ? viewType
                         : binding.abstraction as Type;
                     injectionBinder.Bind(typeToInject).ToValue(view).ToInject(false);
@@ -240,27 +249,28 @@ namespace strange.extensions.mediation.impl
                     {
                         view.BindingContext = mediator;
                     }
+
                     mediator.OnRegister();
                     _boundMediators[view].Add(mediator);
                 }
             }
         }
 
-        private Dictionary<Element, List<IMediator>> _boundMediators = new Dictionary<Element, List<IMediator>>();
-
         /// Removes a mediator when its view is destroyed
         protected virtual void unmapView(Element view)
         {
             if (!_boundMediators.ContainsKey(view)) return;
-            List<IMediator> mediators = _boundMediators[view];
+            var mediators = _boundMediators[view];
             if (mediators == null)
             {
                 return;
             }
+
             foreach (var mediator in mediators)
             {
                 mediator.OnRemove();
             }
+
             _boundMediators.Remove(view);
         }
     }

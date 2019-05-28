@@ -16,11 +16,12 @@
 
 namespace strange.extensions.injector.api
 {
-	public enum InjectionBindingScope
-	{
-		/// Scope is limited to the current Context
+    public enum InjectionBindingScope
+    {
+        /// Scope is limited to the current ViewedContext
         SINGLE_CONTEXT,
-		/// Scope is mapped across all Contexts
-        CROSS_CONTEXT,
-	}
+
+        /// Scope is mapped across all Contexts
+        CROSS_CONTEXT
+    }
 }

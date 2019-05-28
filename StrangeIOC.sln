@@ -1,15 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.2036
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28917.181
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StrangeIOC", "StrangeIOC\StrangeIOC.csproj", "{F4887F1D-C261-4961-B137-851BFC352625}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StrangeIOC", "StrangeIOC\StrangeIOC.csproj", "{F4887F1D-C261-4961-B137-851BFC352625}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StrangeForms", "StrangeForms\StrangeForms.csproj", "{38066B0E-F963-4117-AD88-EE7A3150AB75}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StrangeForms", "StrangeForms\StrangeForms.csproj", "{38066B0E-F963-4117-AD88-EE7A3150AB75}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StrangeIOC.Tests", "StrangeIOC.Tests\StrangeIOC.Tests.csproj", "{13AB3FED-593C-4F61-A071-7647475155F3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "StrangeForms.Tests", "StrangeForms.Tests\StrangeForms.Tests.csproj", "{796B42D5-2D33-4037-A5C5-6BE3A2301D49}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FrameworkBench", "FrameworkBench\FrameworkBench.csproj", "{68F845D6-1377-429C-B0B7-B58947A1ED4B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{796B42D5-2D33-4037-A5C5-6BE3A2301D49}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{796B42D5-2D33-4037-A5C5-6BE3A2301D49}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{796B42D5-2D33-4037-A5C5-6BE3A2301D49}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68F845D6-1377-429C-B0B7-B58947A1ED4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68F845D6-1377-429C-B0B7-B58947A1ED4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68F845D6-1377-429C-B0B7-B58947A1ED4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68F845D6-1377-429C-B0B7-B58947A1ED4B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

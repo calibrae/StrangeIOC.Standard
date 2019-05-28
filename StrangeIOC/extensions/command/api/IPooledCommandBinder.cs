@@ -20,20 +20,16 @@
  *	be recycled, which can be more efficient.
  */
 
-using System;
-using System.Collections.Generic;
 using strange.extensions.pool.impl;
-using strange.extensions.command.impl;
 
 namespace strange.extensions.command.api
 {
-	public interface IPooledCommandBinder
-	{
-		/// Retrieve the Pool of the specified type
-		Pool<T> GetPool<T>();
+    public interface IPooledCommandBinder
+    {
+        /// Switch to disable pooling for those that don't want to use it.
+        bool usePooling { get; set; }
 
-		/// Switch to disable pooling for those that don't want to use it.
-		bool usePooling{ get; set; }
-	}
+        /// Retrieve the Pool of the specified type
+        Pool<T> GetPool<T>();
+    }
 }
-

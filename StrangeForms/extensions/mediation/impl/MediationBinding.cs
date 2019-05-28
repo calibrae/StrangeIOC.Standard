@@ -26,8 +26,8 @@
 using System;
 using System.Reflection;
 using strange.extensions.mediation.api;
-using strange.framework.impl;
 using strange.framework.api;
+using strange.framework.impl;
 using Binder = strange.framework.impl.Binder;
 
 namespace strange.extensions.mediation.impl
@@ -55,15 +55,16 @@ namespace strange.extensions.mediation.impl
 
         IMediationBinding IMediationBinding.ToAbstraction<T>()
         {
-            TypeInfo abstractionType = typeof(T).GetTypeInfo();
+            var abstractionType = typeof(T).GetTypeInfo();
             if (key != null)
             {
-                TypeInfo keyType = (key as Type).GetTypeInfo();
+                var keyType = (key as Type).GetTypeInfo();
                 if (abstractionType.IsAssignableFrom(keyType) == false)
                     throw new MediationException(
-                        "The View " + key.ToString() + " has been bound to the abstraction " + typeof(T).ToString() +
+                        "The View " + key + " has been bound to the abstraction " + typeof(T) +
                         " which the View neither extends nor implements. ", MediationExceptionType.VIEW_NOT_ASSIGNABLE);
             }
+
             _abstraction.Add(abstractionType);
             return this;
         }
@@ -89,34 +90,28 @@ namespace strange.extensions.mediation.impl
         public bool ForceBindingContextSwitch { get; set; }
 
         public bool NoChildrenSwitch { get; private set; }
-    
 
-        public object abstraction
-        {
-            get { return (_abstraction.value == null) ? BindingConst.NULLOID : _abstraction.value; }
-        }
 
-        public object viewModel
-        {
-            get { return (_viewModel.value == null) ? BindingConst.NULLOID : _viewModel.value; }
-        }
+        public object abstraction => _abstraction.value == null ? BindingConst.NULLOID : _abstraction.value;
 
-        new public IMediationBinding Bind<T>()
+        public object viewModel => _viewModel.value == null ? BindingConst.NULLOID : _viewModel.value;
+
+        public new IMediationBinding Bind<T>()
         {
             return base.Bind<T>() as IMediationBinding;
         }
 
-        new public IMediationBinding Bind(object key)
+        public new IMediationBinding Bind(object key)
         {
             return base.Bind(key) as IMediationBinding;
         }
 
-        new public IMediationBinding To<T>()
+        public new IMediationBinding To<T>()
         {
             return base.To<T>() as IMediationBinding;
         }
 
-        new public IMediationBinding To(object o)
+        public new IMediationBinding To(object o)
         {
             return base.To(o) as IMediationBinding;
         }

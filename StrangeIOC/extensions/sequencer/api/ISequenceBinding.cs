@@ -20,29 +20,25 @@
  * @deprecated
  */
 
-using System;
 using strange.extensions.command.api;
-using strange.extensions.sequencer.api;
-using strange.framework.api;
 
 namespace strange.extensions.sequencer.api
 {
-	public interface ISequenceBinding : ICommandBinding
-	{
-		/// Declares that the Binding is a one-off. As soon as it's satisfied, it will be unmapped.
-		new ISequenceBinding Once();
+    public interface ISequenceBinding : ICommandBinding
+    {
+        /// Get/set the property set to `true` by `Once()`
+        new bool isOneOff { get; set; }
 
-		/// Get/set the property set to `true` by `Once()`
-		new bool isOneOff{ get; set;}
+        /// Declares that the Binding is a one-off. As soon as it's satisfied, it will be unmapped.
+        new ISequenceBinding Once();
 
-		new ISequenceBinding Bind<T>();
-		new ISequenceBinding Bind(object key);
-		new ISequenceBinding To<T>();
-		new ISequenceBinding To(object o);
-		new ISequenceBinding ToName<T> ();
-		new ISequenceBinding ToName (object o);
-		new ISequenceBinding Named<T>();
-		new ISequenceBinding Named(object o);
-	}
+        new ISequenceBinding Bind<T>();
+        new ISequenceBinding Bind(object key);
+        new ISequenceBinding To<T>();
+        new ISequenceBinding To(object o);
+        new ISequenceBinding ToName<T>();
+        new ISequenceBinding ToName(object o);
+        new ISequenceBinding Named<T>();
+        new ISequenceBinding Named(object o);
+    }
 }
-

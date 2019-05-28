@@ -21,128 +21,119 @@
  */
 
 using System;
-using System.Collections.Generic;
-using strange.extensions.dispatcher.api;
-using strange.extensions.injector.api;
-using strange.extensions.sequencer.api;
-using strange.extensions.command.api;
 using strange.extensions.command.impl;
+using strange.extensions.dispatcher.api;
+using strange.extensions.sequencer.api;
 using strange.framework.api;
-using strange.framework.impl;
 
 namespace strange.extensions.sequencer.impl
 {
-	public class Sequencer : CommandBinder, ISequencer, ITriggerable
-	{
+    public class Sequencer : CommandBinder, ISequencer, ITriggerable
+    {
+        public override IBinding GetRawBinding()
+        {
+            return new SequenceBinding(resolver);
+        }
 
-		public Sequencer ()
-		{
-		}
+        public override void ReactTo(object key, object data)
+        {
+            var binding = GetBinding(key) as ISequenceBinding;
+            if (binding != null)
+            {
+                nextInSequence(binding, data, 0);
+            }
+        }
 
-		override public IBinding GetRawBinding()
-		{
-			return new SequenceBinding (resolver);
-		}
-		
-		override public void ReactTo(object key, object data)
-		{
-			ISequenceBinding binding = GetBinding (key) as ISequenceBinding;
-			if (binding != null)
-			{
-				nextInSequence (binding, data, 0);
-			}
-		}
+        public void ReleaseCommand(ISequenceCommand command)
+        {
+            if (command.retain == false)
+            {
+                if (activeSequences.ContainsKey(command))
+                {
+                    var binding = activeSequences[command] as ISequenceBinding;
+                    var data = command.data;
+                    activeSequences.Remove(command);
+                    nextInSequence(binding, data, command.sequenceId + 1);
+                }
+            }
+        }
 
-		private void removeSequence(ISequenceCommand command)
-		{
-			if (activeSequences.ContainsKey (command))
-			{
-				command.Cancel();
-				activeSequences.Remove (command);
-			}
-		}
+        public new virtual ISequenceBinding Bind<T>()
+        {
+            return base.Bind<T>() as ISequenceBinding;
+        }
 
-		private void invokeCommand(Type cmd, ISequenceBinding binding, object data, int depth)
-		{
-			ISequenceCommand command = createCommand (cmd, data);
-			command.sequenceId = depth;
-			trackCommand (command, binding);
-			executeCommand (command);
-			ReleaseCommand (command);
-		}
+        public new virtual ISequenceBinding Bind(object value)
+        {
+            return base.Bind(value) as ISequenceBinding;
+        }
 
-		/// Instantiate and Inject the ISequenceCommand.
-		new virtual protected ISequenceCommand createCommand(object cmd, object data)
-		{
-			injectionBinder.Bind<ISequenceCommand> ().To (cmd);
-			ISequenceCommand command = injectionBinder.GetInstance<ISequenceCommand> () as ISequenceCommand;
-			command.data = data;
-			injectionBinder.Unbind<ISequenceCommand> ();
-			return command;
-		}
+        private void removeSequence(ISequenceCommand command)
+        {
+            if (activeSequences.ContainsKey(command))
+            {
+                command.Cancel();
+                activeSequences.Remove(command);
+            }
+        }
 
-		private void trackCommand (ISequenceCommand command, ISequenceBinding binding)
-		{
-			activeSequences [command] = binding;
-		}
+        private void invokeCommand(Type cmd, ISequenceBinding binding, object data, int depth)
+        {
+            var command = createCommand(cmd, data);
+            command.sequenceId = depth;
+            trackCommand(command, binding);
+            executeCommand(command);
+            ReleaseCommand(command);
+        }
 
-		private void executeCommand(ISequenceCommand command)
-		{
-			if (command == null)
-			{
-				return;
-			}
-			command.Execute ();
-		}
+        /// Instantiate and Inject the ISequenceCommand.
+        protected new virtual ISequenceCommand createCommand(object cmd, object data)
+        {
+            injectionBinder.Bind<ISequenceCommand>().To(cmd);
+            var command = injectionBinder.GetInstance<ISequenceCommand>();
+            command.data = data;
+            injectionBinder.Unbind<ISequenceCommand>();
+            return command;
+        }
 
-		public void ReleaseCommand (ISequenceCommand command)
-		{
-			if (command.retain == false)
-			{
-				if (activeSequences.ContainsKey(command))
-				{
-					ISequenceBinding binding = activeSequences [command] as ISequenceBinding;
-					object data = command.data;
-					activeSequences.Remove (command);
-					nextInSequence (binding, data, command.sequenceId + 1);
-				}
-			}
-		}
+        private void trackCommand(ISequenceCommand command, ISequenceBinding binding)
+        {
+            activeSequences[command] = binding;
+        }
 
-		private void nextInSequence(ISequenceBinding binding, object data, int depth)
-		{
-			object[] values = binding.value as object[];
-			if (depth < values.Length)
-			{
-				Type cmd = values [depth] as Type;
-				invokeCommand (cmd, binding, data, depth);
-			}
-			else
-			{
-				if (binding.isOneOff)
-				{
-					Unbind (binding);
-				}
-			}
-		}
+        private void executeCommand(ISequenceCommand command)
+        {
+            if (command == null)
+            {
+                return;
+            }
 
-		private void failIf(bool condition, string message, SequencerExceptionType type)
-		{
-			if (condition)
-			{
-				throw new SequencerException(message, type);
-			}
-		}
+            command.Execute();
+        }
 
-		new public virtual ISequenceBinding Bind<T> ()
-		{
-			return base.Bind<T> () as ISequenceBinding;
-		}
+        private void nextInSequence(ISequenceBinding binding, object data, int depth)
+        {
+            var values = binding.value as object[];
+            if (depth < values.Length)
+            {
+                var cmd = values[depth] as Type;
+                invokeCommand(cmd, binding, data, depth);
+            }
+            else
+            {
+                if (binding.isOneOff)
+                {
+                    Unbind(binding);
+                }
+            }
+        }
 
-		new public virtual ISequenceBinding Bind (object value)
-		{
-			return base.Bind (value) as ISequenceBinding;
-		}
-	}
+        private void failIf(bool condition, string message, SequencerExceptionType type)
+        {
+            if (condition)
+            {
+                throw new SequencerException(message, type);
+            }
+        }
+    }
 }
-
